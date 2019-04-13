@@ -5,7 +5,7 @@
 hello()
 }
 \description{
-Prints 'Hello, world!'.
+Returns example LMS2z output
 }
 \examples{
 hello()
