@@ -1,5 +1,5 @@
 # create the shiny application user interface
-shinyAppUI <- fluidPage(
+ui <- fluidPage(
 
   # Application title
   titlePanel("LMSgrowth2"),
@@ -19,13 +19,13 @@ shinyAppUI <- fluidPage(
 )
 
 # Define server logic required to draw a histogram
-shinyAppServer <- function(input, output) {
+server <- function(input, output) {
   output$sds_output <- renderText({
     paste("SDS is", get_height_sds(4, input$height_id, 2))
   })
 }
 
 launchApp <- function() {
-  shinyApp(ui = shinyAppUI, server = shinyAppServer)
+  shinyApp(ui = ui, server = server)
 }
 
