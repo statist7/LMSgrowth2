@@ -1,26 +1,28 @@
 # LMSgrowth2
 
-## Development setup using RStudio
+## Prerequisites
+
+Following packages are used during development and must be installed in the R user library
+
+```
+install.packages(c('devtools', 'usethis', 'testthat'))
+```
+
+## Project setup using RStudio
 
 - Clone the LMSgrowth2 repository
-  - File > New Project > Version Control > Git > 
-    - Repository URL: git@github.com:UCL/LMSgrowth2.git
-    - Click 'Create Project'
+    - URL: git@github.com:UCL/LMSgrowth2.git
 
-- Once the project is open in RStudio, in R:
-  - install.packages('packrat')
-  - packrat::init()
-  - packrat::restore()
+- Open the project in RStudio
 
-- Set the RStudio project options for build tools (you can leave the defaults)
-  - Build > Configure Build Tools...
-  - Click 'OK'
+- Install the project package dependencies:
+  - `packrat::restore()`
+  
+- Test:
+  - Build > Test Package
 
-- Close the project
-
-- Reopen the LMSgrowth2 project
-
-- Build and install the LMSgrowth2 package:
-    - Click on Build > Install & Restart
+- Load the LMSgrowth2 package for development
+    - Build > Load All (Ctrl+Shift+L)
+    - (or from tab) Build > Load All
     - Type `launchApp()` in the R console to test
 
