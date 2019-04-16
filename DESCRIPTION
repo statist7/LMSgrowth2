@@ -9,3 +9,5 @@ License: What license is it under?
 Imports: shiny, sitar
 Encoding: UTF-8
 LazyData: true
+Suggests: 
+    testthat
