@@ -2,21 +2,25 @@
 
 ## Development setup using RStudio
 
-- Clone LMSgrowth2 (you can do within RStudio):
+- Clone the LMSgrowth2 repository
   - File > New Project > Version Control > Git > 
     - Repository URL: git@github.com:UCL/LMSgrowth2.git
     - Click 'Create Project'
 
-- Then, in R:
-  - (if necessary:) install.packages('packrat')
+- Once the project is open in RStudio, in R:
+  - install.packages('packrat')
   - packrat::init()
   - packrat::restore()
 
-- Use RStudio project options for build tools
+- Set the RStudio project options for build tools (you can leave the defaults)
   - Build > Configure Build Tools...
+  - Click 'OK'
 
-- Close project & reopen project to get build options
+- Close the project
 
-- Click on Build > Install & Restart
-  - Will automatically install and load LMSgrowth2 in R session
-  - Type `launchApp()` to test
+- Reopen the LMSgrowth2 project
+
+- Build and install the LMSgrowth2 package:
+    - Click on Build > Install & Restart
+    - Type `launchApp()` in the R console to test
+
