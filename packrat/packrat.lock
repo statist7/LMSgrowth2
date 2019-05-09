@@ -125,6 +125,11 @@ Source: CRAN
 Version: 0.2.0
 Hash: 81a8008a5e7858552503935f1abe48aa
 
+Package: praise
+Source: CRAN
+Version: 1.0.0
+Hash: 77da8f1df873a4b91e5c4a68fe2fb1b6
+
 Package: promises
 Source: CRAN
 Version: 1.0.1
@@ -177,6 +182,18 @@ Source: CRAN
 Version: 1.4.3
 Hash: ed2a82fc7cc668c1345223d938cdfaf2
 
+Package: stringr
+Source: CRAN
+Version: 1.4.0
+Hash: 67da32dbb2a7a16f2ef124336358e54a
+Requires: glue, magrittr, stringi
+
+Package: testthat
+Source: CRAN
+Version: 2.0.1
+Hash: 777eb6e94f5a62bf6320fecf0175bbbb
+Requires: R6, crayon, digest, magrittr, praise, rlang, withr, cli
+
 Package: tibble
 Source: CRAN
 Version: 2.1.1
@@ -200,6 +217,11 @@ Package: utf8
 Source: CRAN
 Version: 1.1.4
 Hash: f3f97ce59092abc8ed3fd098a59e236c
+
+Package: withr
+Source: CRAN
+Version: 2.1.2
+Hash: d534108bcd5f34ec73e9eb523751ba20
 
 Package: xtable
 Source: CRAN
