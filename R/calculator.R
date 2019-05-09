@@ -51,6 +51,16 @@ source('R/functions.R', local = TRUE)
     }
   })
   
+  set_bmi <- function() {
+    if (is.numeric(input$height) && is.numeric(input$weight)) {
+      bmi <- input$weight/(input$height/100)^2
+      updateNumericInput(session, "bmi", value=bmi)
+    }
+  }
+
+  observeEvent(input$height, { set_bmi() })
+  observeEvent(input$weight, { set_bmi() })
+
   output$height_info <- renderText({
     if (is.numeric(input$height)) {
       lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'ht', input$height)
