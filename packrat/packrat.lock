@@ -161,8 +161,8 @@ Requires: dplyr, generics, purrr, rlang, tibble, tidyr
 
 Package: shiny
 Source: CRAN
-Version: 1.3.1
-Hash: 8807813e4c9f07028336aeb805cfadae
+Version: 1.3.2
+Hash: a48cf01573400333efa51dc999ab6447
 Requires: R6, crayon, digest, htmltools, httpuv, jsonlite, later, mime,
     promises, rlang, sourcetools, xtable
 
@@ -225,5 +225,5 @@ Hash: d534108bcd5f34ec73e9eb523751ba20
 
 Package: xtable
 Source: CRAN
-Version: 1.8-3
-Hash: 91199102994584c5f0e8cbba5582ecc4
+Version: 1.8-4
+Hash: dc0d47261b678d26032363bebd050540
