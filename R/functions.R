@@ -1,32 +1,32 @@
 #' returns the value if it is numeric, otherwise a default value
-get_numeric <- function(value, default) {
+.get_numeric <- function(value, default) {
   if (!is.numeric(value)) { value <- default }
   value
 }
 
 #' calculates the duration in days of the arguments
-duration_in_years <- function(years, months, weeks, days) {
-  years <- get_numeric(years, 0)
-  months <- get_numeric(months, 0)
-  weeks <- get_numeric(weeks, 0)
-  days <- get_numeric(days, 0)
+.duration_in_years <- function(years, months, weeks, days) {
+  years <- .get_numeric(years, 0)
+  months <- .get_numeric(months, 0)
+  weeks <- .get_numeric(weeks, 0)
+  days <- .get_numeric(days, 0)
   (years) + (months / 12) + (weeks / 52) + (days / 365.25)
 }
 
 #' calculates the duration in days of the arguments
-duration_in_days <- function(years, months, weeks, days) {
-  duration_in_years(years, months, weeks, days) * 365.25
+.duration_in_days <- function(years, months, weeks, days) {
+  .duration_in_years(years, months, weeks, days) * 365.25
 }
 
 #' returns the SDS and L M & S values for a given measurement 
-measurement_to_scores <- function(age_y, sex, measure, value) {
+.measurement_to_scores <- function(age_y, sex, measure, value) {
   z <- sitar::LMS2z(age_y, value, sex, measure=measure, ref=sitar::uk90, LMStable = TRUE)
   lmstable <- attr(z, "LMStable")
   list(z=z[1], L=lmstable$L, M=lmstable$M, S=lmstable$S, value=value, measure=measure)
 }
 
 #' constructs a string to display sds & other information about a measurement
-stats2string <- function(lms_stats, title="") {
+.stats2string <- function(lms_stats, title="") {
   sds <- lms_stats$z
   centile <- sitar::z2cent(sds)
   perc_predicted <- 100 * lms_stats$value / lms_stats$M

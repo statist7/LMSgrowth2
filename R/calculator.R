@@ -1,7 +1,7 @@
 source('R/functions.R', local = TRUE)
 
 # Measurement to SDS calculator ###############################################
-calculatorUI <- function(id, label="calculator ui") {
+.calculatorUI <- function(id, label="calculator ui") {
   ns <- NS(id)
   
   fluidPage(
@@ -13,10 +13,10 @@ calculatorUI <- function(id, label="calculator ui") {
                      choices = list("Male" = 1, "Female" = 2), 
                      selected = 1),
         h4("Age"),
-        numericInput(ns("age_years"), "years", value=0, min=0),
-        numericInput(ns("age_months"), "months", value=0, min=0),
-        numericInput(ns("age_weeks"), "weeks", value=0, min=0),
-        numericInput(ns("age_days"), "days", value=0, min=0),
+        numericInput(ns("age_years"), "years", value="", min=0),
+        numericInput(ns("age_months"), "months", value="", min=0),
+        numericInput(ns("age_weeks"), "weeks", value="", min=0),
+        numericInput(ns("age_days"), "days", value="", min=0),
         h4("Measurements"),
         numericInput(ns("height"), "Height (cm)", value="", min = 0, max = 300),
         numericInput(ns("weight"), "Weight (kg)", value="", min = 0, max = 300),
@@ -40,47 +40,49 @@ calculatorUI <- function(id, label="calculator ui") {
 }
 
 # Calculator tab server #######################################################
-calculator <- function(input, output, session, stringAsFactors) {
+.calculator <- function(input, output, session, stringAsFactors) {
   age_in_years <- reactive({
-    duration_in_years(input$age_years, input$age_months, input$age_weeks, input$age_days)
+    .duration_in_years(input$age_years, input$age_months, input$age_weeks, input$age_days)
   })
   
   output$age_info <- renderText({
-    paste("Age:", age_in_years(), "years")
+    if (is.numeric(age_in_years()) && age_in_years() > 0) {
+      paste("Age:", age_in_years(), "years")  
+    }
   })
   
   output$height_info <- renderText({
     if (is.numeric(input$height)) {
-      lms_stats <- measurement_to_scores(age_in_years(), input$sex, 'ht', input$height)
-      stats2string(lms_stats, "Height")
+      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'ht', input$height)
+      .stats2string(lms_stats, "Height")
     }
   })
   
   output$weight_info <- renderText({
     if (is.numeric(input$weight)) {
-      lms_stats <- measurement_to_scores(age_in_years(), input$sex, 'wt', input$weight)
-      stats2string(lms_stats, "Weight")
+      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'wt', input$weight)
+      .stats2string(lms_stats, "Weight")
     }
   })
   
   output$bmi_info <- renderText({
     if (is.numeric(input$bmi)) {
-      lms_stats <- measurement_to_scores(age_in_years(), input$sex, 'bmi', input$bmi)
-      stats2string(lms_stats, "BMI")
+      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'bmi', input$bmi)
+      .stats2string(lms_stats, "BMI")
     }
   })
   
   output$sitht_info <- renderText({
     if (is.numeric(input$sitht)) {
-      lms_stats <- measurement_to_scores(age_in_years(), input$sex, 'sitht', input$sitht)
-      stats2string(lms_stats, "Sitting height")
+      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'sitht', input$sitht)
+      .stats2string(lms_stats, "Sitting height")
     }
   })
   
   output$leglen_info <- renderText({
     if (is.numeric(input$legln)) {
-      lms_stats <- measurement_to_scores(age_in_years(), input$sex, 'leglen', input$legln)
-      stats2string(lms_stats, "Leg length")
+      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'leglen', input$legln)
+      .stats2string(lms_stats, "Leg length")
     }
   })
 }

@@ -1,5 +1,5 @@
 # An example tab ##############################################################
-exampleUI <- function(id, label="example ui") {
+.exampleUI <- function(id, label="example ui") {
   ns <- NS(id)
   
   fluidPage(
@@ -16,7 +16,7 @@ exampleUI <- function(id, label="example ui") {
 }
 
 # Example server logic ########################################################
-example <- function(input, output, session, stringAsFactors) {
+.example <- function(input, output, session, stringAsFactors) {
   output$greeting <- renderText({
     paste('Hello,', input$name)
   })

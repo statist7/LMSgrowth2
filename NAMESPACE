@@ -1,4 +1,2 @@
-exportPattern("^[[:alpha:]]+")
+exportPattern("^[^\\.]")
 import(shiny)
-importFrom("graphics", "hist")
-importFrom("utils", "data")
