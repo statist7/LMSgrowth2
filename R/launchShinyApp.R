@@ -1,28 +1,20 @@
-# create the shiny application user interface
-ui <- fluidPage(
+library(shiny)
 
-  # Application title
-  titlePanel("LMSgrowth2"),
+source('R/calculator.R', local=TRUE)
+source('R/example.R', local=TRUE)
 
-  # Sidebar with a slider input for number of bins
-  sidebarLayout(
-    sidebarPanel(
-      helpText("Get height SDS for 4 year-old girl"),
-      numericInput("height_id", "Height (cm)", value=70, min = 5, max = 300)
-    ),
-
-    # Show a plot of the generated distribution
-    mainPanel(
-      textOutput("sds_output")
-    )
-  )
+# Main UI for the tabs ########################################################
+ui <- navbarPage("LMSgrowth2",
+                 tabPanel("Calculator", calculatorUI("calculator")),
+                 tabPanel("Next", bootstrapPage("TODO")),
+                 tabPanel("Next", bootstrapPage("TODO")),
+                 tabPanel("Example", exampleUI("example"))
 )
 
-# Define server logic required to draw a histogram
+# Shiny server logic ##########################################################
 server <- function(input, output) {
-  output$sds_output <- renderText({
-    paste("SDS is", get_height_sds(4, input$height_id, 2))
-  })
+  callModule(calculator, "calculator", stringAsFactors=FALSE)
+  callModule(example, "example", stringAsFactors=FALSE)
 }
 
 launchApp <- function() {

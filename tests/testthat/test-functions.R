@@ -1,5 +1,6 @@
 context("test-functions")
 
 test_that("get_height_sds ok", {
-  expect_equal(get_height_sds(4, 101.54, 2), 0)
+  lms_stats <- measurement_to_scores(4, 2, 'ht', 101.54)
+  expect_equal(lms_stats$z, 0)
 })
