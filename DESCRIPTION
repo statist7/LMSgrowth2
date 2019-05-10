@@ -1,0 +1,13 @@
+Package: LMSgrowth2
+Type: Package
+Title: Working with Growth References using the LMS Method
+Version: 0.1.0
+Author: Tim Cole, David Pérez-Suárez, Asif U Tamuri
+Maintainer: Asif U Tamuri <a.tamuri@ucl.ac.uk>
+Description: Working with Growth References using the LMS Method
+License: What license is it under?
+Imports: shiny, sitar
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+    testthat
