@@ -22,7 +22,12 @@
 .measurement_to_scores <- function(age_y, sex, measure, value) {
   z <- sitar::LMS2z(age_y, value, sex, measure=measure, ref=sitar::uk90, LMStable = TRUE)
   lmstable <- attr(z, "LMStable")
-  list(z=z[1], L=lmstable$L, M=lmstable$M, S=lmstable$S, value=value, measure=measure)
+  if (length(z) == 1) {
+    z_out = z[1]
+  } else {
+    z_out = z
+  }
+  list(z=z_out, L=lmstable$L, M=lmstable$M, S=lmstable$S, value=value, measure=measure)
 }
 
 #' constructs a string to display sds & other information about a measurement
