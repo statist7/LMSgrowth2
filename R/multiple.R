@@ -30,36 +30,34 @@
 .multiple <- function(input, output, session, stringAsFactors) {
   ns <- NS('multiple')
   
-  dataset <- reactive({
-    if (is.null(input$file)) {
-      # User has not uploaded a file yet
-      print('input$file is null')
-      return(data.frame())
+  rvalues <- reactiveValues(
+    df = NULL
+  )
+  
+  cols <- reactiveVal(NULL)
+  
+  observe({
+    if(!is.null(input$file)) {
+      df <- as.data.frame(read.csv(input$file$datapath))
+      cols(names(df))
+      rvalues$df <- df
     }
-    
-    print('input$file is not null')
-    dataset <- as.data.frame(read.csv(input$file$datapath))
-    print('loaded dataset')
-    return(dataset)
   })
   
-  output$table <- renderTable({
-    return(dataset())
-  })
+  output$table <- renderTable(rvalues$df)
   
   # Select variables:
   output$sexSelect <- renderUI({
     
-    if (identical(dataset(), '') || identical(dataset(),data.frame())) return(NULL)
-    
-    match <- intersect(c('Sex', 'sex', 'Gender', 'gender'), names(dataset()))
+    if (is.null(isolate(rvalues$df)) && is.null(input$file)) return(NULL)
+    match <- intersect(c('Sex', 'sex', 'Gender', 'gender'), isolate(cols()))
     if (length(match) == 1) {
       selected <- paste('[Column] ', match, sep='')
     } else {
       selected <- 'Male'
     }
     
-    options <-  c('Male', 'Female', paste('[Column] ', names(dataset()), sep=''))
+    options <-  c('Male', 'Female', paste('[Column] ', isolate(cols()), sep=''))
     
     # Variable selection:    
     selectInput(ns("sex"), 
@@ -69,9 +67,9 @@
   })
   
   output$ageSelect <- renderUI({
-    if (identical(dataset(), '') || identical(dataset(),data.frame())) return(NULL)
-  
-    match <- intersect(c('Age', 'age', 'Years', 'years', 'Days', 'days'), names(dataset()))
+    
+    if (is.null(isolate(rvalues$df)) && is.null(input$file)) return(NULL)
+    match <- intersect(c('Age', 'age', 'Years', 'years', 'Days', 'days'), isolate(cols()))
     
     if (length(match) == 1) {
       selected <- paste('[Column] ', match, sep='')
@@ -81,7 +79,7 @@
       selected <- ''
     }
     
-    options <-  paste('[Column] ', names(dataset()), sep='')
+    options <-  paste('[Column] ', isolate(cols()), sep='')
     
     output = tagList()
     output[[1]] = selectInput(ns("ageSource"), "Age", options, selected = selected)
@@ -92,8 +90,8 @@
   })
   
   output$measureSelect <- renderUI({
-    if (identical(dataset(), '') || identical(dataset(),data.frame())) return(NULL)
-    options <-  c('N/A', paste('[Column] ', names(dataset()), sep=''))
+    if (is.null(isolate(rvalues$df)) && is.null(input$file)) return(NULL)
+    options <-  c('N/A', paste('[Column] ', isolate(cols()), sep=''))
     output = tagList()
     output[[1]] = selectInput(ns("height"), "Height (cm)", options)
     output[[2]] = selectInput(ns("weight"), "Weight (kg)", options)
@@ -103,29 +101,24 @@
     output
   })
   
-  heightSDS <- reactive({
-    if (identical(dataset(), '') || identical(dataset(),data.frame())) return(NULL)
-    if (is.null(input$height) || input$height == 'N/A') return(NULL)
-    column = strsplit(input$height, split=" ")[[1]][2]
-    dataset()[, column]
-  })
-  
-  output$raw_output <- reactive({
-    if (!is.null(heightSDS())) {
-      if (startsWith(input$sex, '[Column]')) {
-        sex_column = dataset()[, strsplit(input$sex, split=" ")[[1]][2]]
+  observe({
+    height_value <- input$height
+    if (!is.null(height_value) && height_value != 'N/A') {
+      df <- isolate(rvalues$df)
+      column = strsplit(height_value, split=" ")[[1]][2]
+      sex_value <- isolate(input$sex)
+      if (startsWith(sex_value, '[Column]')) {
+        sex_column = df[, strsplit(sex_value, split=" ")[[1]][2]]
       } else {
-        sex_column = input$sex
+        sex_column = sex_value
       }
+      age_value <- isolate(input$ageSource)
+      age_column = df[, strsplit(age_value, split=" ")[[1]][[2]]]
       
-      age_column = dataset()[, strsplit(input$ageSource, split=" ")[[1]][[2]]]
-      
-      lms_stats <- .measurement_to_scores(age_column, sex_column, 'ht', heightSDS())
-      paste(lms_stats$z[1:10], collapse =" ")
-    } else {
-      return(NULL)
+      lms_stats <- .measurement_to_scores(age_column, sex_column, 'ht', df[, column])
+      df$height_sds <- lms_stats$z
+      rvalues$df <- df
     }
   })
-  
 }
 
