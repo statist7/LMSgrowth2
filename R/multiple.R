@@ -116,8 +116,10 @@
       age_column = df[, strsplit(age_value, split=" ")[[1]][[2]]]
       
       lms_stats <- .measurement_to_scores(age_column, sex_column, 'ht', df[, column])
-      df$height_sds <- lms_stats$z
-      rvalues$df <- df
+      new_column = paste(column, '@Height_SDS', sep='')
+      df[[new_column]] <- lms_stats$z
+      new_order <- append(cols(), new_column, which(cols()==column))
+      rvalues$df <- df[new_order]
     }
   })
 }
