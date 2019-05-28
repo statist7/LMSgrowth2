@@ -72,10 +72,10 @@
       selected <- 'Male'
     }
     
-    options <-  c('Male', 'Female', paste('[Column] ', isolate(original_columns()), sep=''))
+    options <-  c('Male', 'Female', paste('[Column] ', isolate(original_columns()), sep = ''))
     
     # Variable selection
-    o[[n(o)]] = selectInput(ns("sex"),  label = "Sex",  choices = options,  selected = selected, multiple =FALSE)
+    o[[n(o)]] = selectInput(ns("sex"),  label = "Sex",  choices = options,  selected = selected, multiple = FALSE)
     
     match <- intersect(c('Age', 'age', 'Years', 'years', 'Days', 'days'), isolate(original_columns()))
     
@@ -162,32 +162,32 @@
         
         if ('SDS' %in% input$to_add) {
           new_column = paste('LMS', 'SDS', column, code_name, sep='_')
-          df[[new_column]] <- lms_stats$z
+          df[[new_column]] <- round(lms_stats$z, digits = 2)
         }
         
         if ('Centile' %in% input$to_add) {
           new_column = paste('LMS', 'Centile', column, code_name, sep='_')
-          df[[new_column]] <- sitar::z2cent(lms_stats$z)
+          df[[new_column]] <- round(sitar::z2cent(lms_stats$z), digits=2)
         }
         
         if ('% Predicted' %in% input$to_add) {
           new_column = paste('LMS', 'PercPredicted', column, code_name, sep='_')
-          df[[new_column]] <- 100 * lms_stats$value / lms_stats$M
+          df[[new_column]] <- round(100 * lms_stats$value / lms_stats$M, digits=2)
         }
         
         if ('Predicted' %in% input$to_add) {
           new_column = paste('LMS', 'Predicted', column, code_name, sep='_')
-          df[[new_column]] <- lms_stats$M
+          df[[new_column]] <- round(lms_stats$M, digits=2)
         }
         
         if ('% CV' %in% input$to_add) {
           new_column = paste('LMS', 'PercCV', column, code_name, sep='_')
-          df[[new_column]] <- lms_stats$S * 100
+          df[[new_column]] <- round(lms_stats$S * 100, digits=2)
         }
         
         if ('Skewness' %in% input$to_add) {
           new_column = paste('LMS', 'Skewness', column, code_name, sep='_')
-          df[[new_column]] <- lms_stats$L
+          df[[new_column]] <- round(lms_stats$L, digits=2)
         }
         
         # fix the column order if it didn't exist already
