@@ -7,10 +7,10 @@
       sidebarPanel(
         h3("Measurements to SDS"),
 
-        uiOutput(ns("fileInput")),
+        uiOutput(ns("file_input")),
         
         # after uploading data, we show:
-        uiOutput(ns("measurementForm"))
+        uiOutput(ns("measurement_form"))
         ),
       
       mainPanel(
@@ -43,7 +43,7 @@
   })
   
   # hide the file input once we've got the data frame saved locally
-  output$fileInput <- renderUI({
+  output$file_input <- renderUI({
     if(is.null(original_data$df)) {
       return(fileInput(ns('file'), 'Upload data file'))
     } else {
@@ -54,7 +54,7 @@
   output$table <- renderTable(original_data$df)
   
   # display the input form, populating the options from the uploaded data
-  output$measurementForm <- renderUI({
+  output$measurement_form <- renderUI({
     if (!original_data$initialised) return(NULL)
     
     output_tags <- tagList()
@@ -88,8 +88,8 @@
       selected <- ''
     }
     
-    add_tag(selectInput(ns("ageSource"), "Age", column_options, selected = selected))
-    add_tag(selectInput(ns("ageUnit"), "Unit of age", c('Days', 'Weeks', 'Months', 'Years'), selected = 'years'))
+    add_tag(selectInput(ns("age_source"), "Age", column_options, selected = selected))
+    add_tag(selectInput(ns("age_unit"), "Unit of age", c('Days', 'Weeks', 'Months', 'Years'), selected = 'years'))
     
     # only display measurement selection if we have loaded a dataframe
     options <-  c('N/A', column_options)
@@ -101,7 +101,7 @@
     
     add_tag(selectInput(ns("to_add"), "Calculate", c("SDS", "Centile", "% Predicted", "Predicted", "% CV", "Skewness"), selected = "SDS", multiple = TRUE, selectize = TRUE))
     add_tag(actionButton(ns('apply'), 'Apply'))
-    add_tag(downloadButton(ns("downloadData"), "Download"))
+    add_tag(downloadButton(ns("download_data"), "Download"))
     
     output_tags
   })
@@ -130,7 +130,7 @@
   
   get_age <- function() {
       df <- isolate(original_data$df)
-      age_column_or_value <- isolate(input$ageSource)
+      age_column_or_value <- isolate(input$age_source)
       age_column = df[, strsplit(age_column_or_value, split=" ")[[1]][[2]]]
       return(age_column)
   }
@@ -157,7 +157,8 @@
       if (!is.null(value) && value != 'N/A') {
         column = strsplit(value, split=" ")[[1]][2]
         sex_column_or_value <- get_sex()
-        age_column_or_value <- get_age()
+        age_column_or_value <- get_age() 
+        # TODO: convert age into year units
         
         lms_stats <- .measurement_to_scores(age_column_or_value, sex_column_or_value, code_name, df[, column])
         
@@ -199,7 +200,7 @@
       return(df)
   }
   
-  output$downloadData <- downloadHandler(
+  output$download_data <- downloadHandler(
     filename = 'lms_download.csv',
     content = function(file) {
       write.csv(original_data$df, file, row.names = FALSE)
