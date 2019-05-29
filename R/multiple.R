@@ -53,6 +53,13 @@
   
   output$table <- renderTable(original_data$df)
   
+  
+  get_selected <- function(to_match, default) {
+    match <- original_columns() %>% isolate %>% str_detect(to_match) %>% which
+    { if (length(match) > 0) paste('[Column]', original_columns()[match[1]]) else default }
+  }
+  
+  
   # display the input form, populating the options from the uploaded data
   output$measurement_form <- renderUI({
     if (!original_data$initialised) return(NULL)
@@ -62,46 +69,29 @@
     add_tag <- function(t) {
       output_tags[[length(output_tags) + 1]] <<- t 
     }
-    
     column_options <- paste('[Column]', isolate(original_columns()), sep = ' ')
     
-    # Sex
-    match <- intersect(c('Sex', 'sex', 'Gender', 'gender'), isolate(original_columns()))
-    if (length(match) == 1) {
-      selected <- paste('[Column] ', match, sep='')
-    } else {
-      selected <- 'Male'
-    }
-    
+    # sex
+    selected <- get_selected('[Ss]ex|[Gg]ender', 'Male')
     options <-  c('Male', 'Female', column_options)
+    selectInput(ns("sex"),  label = "Sex",  choices = options,  selected = selected, multiple = FALSE) %>% add_tag
     
-    add_tag(selectInput(ns("sex"),  label = "Sex",  choices = options,  selected = selected, multiple = FALSE))
-    
-    # Age    
-    match <- intersect(c('Age', 'age', 'Years', 'years', 'Days', 'days'), isolate(original_columns()))
-    
-    if (length(match) == 1) {
-      selected <- paste('[Column] ', match, sep='')
-    } else if (length(match) > 1) {
-      selected <- paste('[Column] ', match[1], sep='')
-    } else {
-      selected <- ''
-    }
-    
-    add_tag(selectInput(ns("age_source"), "Age", column_options, selected = selected))
-    add_tag(selectInput(ns("age_unit"), "Unit of age", c('Days', 'Weeks', 'Months', 'Years'), selected = 'years'))
+    # age
+    selected <- get_selected('[Aa]ge|[Yy]ears|[Dd]ays', '')
+    selectInput(ns("age_source"), "Age", column_options, selected = selected) %>% add_tag
+    selectInput(ns("age_unit"), "Unit of age", c('Days', 'Weeks', 'Months', 'Years'), selected = 'years') %>% add_tag
     
     # only display measurement selection if we have loaded a dataframe
     options <-  c('N/A', column_options)
-    add_tag(selectInput(ns("height"), "Height (cm)", options))
-    add_tag(selectInput(ns("weight"), "Weight (kg)", options))
-    add_tag(selectInput(ns("bmi"), "BMI (kg/m^2)", options))
-    add_tag(selectInput(ns("sitht"), "Sitting height (cm)", options))
-    add_tag(selectInput(ns("leglen"), "Leg length (cm)", options))
-    
-    add_tag(selectInput(ns("to_add"), "Calculate", c("SDS", "Centile", "% Predicted", "Predicted", "% CV", "Skewness"), selected = "SDS", multiple = TRUE, selectize = TRUE))
-    add_tag(actionButton(ns('apply'), 'Apply'))
-    add_tag(downloadButton(ns("download_data"), "Download"))
+    selectInput(ns("height"), "Height (cm)", options, selected = get_selected('[Hh]eight', 'N/A')) %>% add_tag
+    selectInput(ns("weight"), "Weight (kg)", options, selected = get_selected(c('[Ww]eight'), 'N/A')) %>% add_tag
+    selectInput(ns("bmi"), "BMI (kg/m^2)", options, selected = get_selected(c('BMI|bmi'), 'N/A')) %>% add_tag
+    selectInput(ns("sitht"), "Sitting height (cm)", options, 'N/A') %>% add_tag
+    selectInput(ns("leglen"), "Leg length (cm)", options, 'N/A') %>% add_tag
+   
+    selectInput(ns("to_add"), "Calculate", c("SDS", "Centile", "% Predicted", "Predicted", "% CV", "Skewness"), selected = "SDS", multiple = TRUE, selectize = TRUE) %>% add_tag
+    actionButton(ns('apply'), 'Apply') %>% add_tag
+    downloadButton(ns("download_data"), "Download") %>% add_tag
     
     output_tags
   })
@@ -187,10 +177,10 @@
         }
         
         # fix the column order if it didn't exist already
-        # if (is.na(match(new_column, columns))) {
-        #   new_order <- append(columns, new_column, which(columns==column))  
-        #   df <- df[new_order]
-        # }
+        # if (is.na(match(new_column, columns))) {
+        #   new_order <- append(columns, new_column, which(columns==column))  
+        #   df <- df[new_order]
+        # }
       } else {
         # remove old columns
         df <- df[, !colnames(df) %in% measurement_names[[measurement_name]]$columns]
