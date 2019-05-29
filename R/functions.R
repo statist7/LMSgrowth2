@@ -30,23 +30,40 @@
   list(z=z_out, L=lmstable$L, M=lmstable$M, S=lmstable$S, value=value, measure=measure)
 }
 
+.get_sds <- function(lms_stats) {
+  lms_stats$z
+}
+
+.get_centile <- function(lms_stats) {
+  sitar::z2cent(lms_stats$z)
+}
+
+.get_perc_predicted <- function(lms_stats) {
+  100 * lms_stats$value / lms_stats$M
+}
+
+.get_predicted <- function(lms_stats) {
+  lms_stats$M
+}
+
+.get_perc_cv <- function(lms_stats) {
+  lms_stats$S * 100
+}
+
+.get_skewness <- function(lms_stats) {
+  lms_stats$L
+}
+
 #' constructs a string to display sds & other information about a measurement
 .stats2string <- function(lms_stats, title="") {
-  sds <- lms_stats$z
-  centile <- sitar::z2cent(sds)
-  perc_predicted <- 100 * lms_stats$value / lms_stats$M
-  predicted <- lms_stats$M
-  perc_cv <- lms_stats$S * 100
-  skewness <- lms_stats$L
-  
   # quick and dirty output for now
   labels <- matrix(
-    c('SDS', sds, 
-      'Centile', centile,
-      '% Predicted', perc_predicted,
-      'Predicted', predicted,
-      '% CV', perc_cv,
-      'Skewness', skewness
+    c('SDS', .get_sds(lms_stats), 
+      'Centile', .get_centile(lms_stats),
+      '% Predicted', .get_perc_predicted(lms_stats),
+      'Predicted', .get_predicted(lms_stats),
+      '% CV', .get_perc_cv(lms_stats),
+      'Skewness', .get_skewness(lms_stats)
     ), byrow = T, ncol = 2
   )
   output <- apply(labels, 1, function(x) paste(x[1], x[2]))

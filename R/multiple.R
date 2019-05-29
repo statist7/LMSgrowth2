@@ -1,4 +1,4 @@
-# An example tab ##############################################################
+# Tab for multiple measurements ##############################################################
 .multipleUI <- function(id, label="multiple measurements") {
   ns <- NS(id)
   
@@ -20,7 +20,7 @@
   )
 }
 
-# Example server logic ########################################################
+# Server logic for multiple measurements ########################################################
 .multiple <- function(input, output, session, stringAsFactors) {
   # To use `renderUI` within modules, we need to wrap with `ns()`
   ns <- session$ns
@@ -57,14 +57,15 @@
   output$measurementForm <- renderUI({
     if (!original_data$initialised) return(NULL)
     
-    o <- tagList()
+    output_tags <- tagList()
     
-    # to increment index when adding tags
-    n <- function(item) {
-      return(length(item) + 1)
+    add_tag <- function(t) {
+      output_tags[[length(output_tags) + 1]] <<- t 
     }
     
-    # select input for sex
+    column_options <- paste('[Column]', isolate(original_columns()), sep = ' ')
+    
+    # Sex
     match <- intersect(c('Sex', 'sex', 'Gender', 'gender'), isolate(original_columns()))
     if (length(match) == 1) {
       selected <- paste('[Column] ', match, sep='')
@@ -72,11 +73,11 @@
       selected <- 'Male'
     }
     
-    options <-  c('Male', 'Female', paste('[Column] ', isolate(original_columns()), sep = ''))
+    options <-  c('Male', 'Female', column_options)
     
-    # Variable selection
-    o[[n(o)]] = selectInput(ns("sex"),  label = "Sex",  choices = options,  selected = selected, multiple = FALSE)
+    add_tag(selectInput(ns("sex"),  label = "Sex",  choices = options,  selected = selected, multiple = FALSE))
     
+    # Age    
     match <- intersect(c('Age', 'age', 'Years', 'years', 'Days', 'days'), isolate(original_columns()))
     
     if (length(match) == 1) {
@@ -87,31 +88,30 @@
       selected <- ''
     }
     
-    options <-  paste('[Column] ', isolate(original_columns()), sep='')
-    
-    o[[n(o)]] = selectInput(ns("ageSource"), "Age", options, selected = selected)
-    o[[n(o)]] = selectInput(ns("ageUnit"), "Unit of age", c('Days', 'Weeks', 'Months', 'Years'), selected = 'years')
+    add_tag(selectInput(ns("ageSource"), "Age", column_options, selected = selected))
+    add_tag(selectInput(ns("ageUnit"), "Unit of age", c('Days', 'Weeks', 'Months', 'Years'), selected = 'years'))
     
     # only display measurement selection if we have loaded a dataframe
-    options <-  c('N/A', paste('[Column] ', isolate(original_columns()), sep=''))
-    o[[n(o)]] = selectInput(ns("height"), "Height (cm)", options)
-    o[[n(o)]] = selectInput(ns("weight"), "Weight (kg)", options)
-    o[[n(o)]] = selectInput(ns("bmi"), "BMI (kg/m^2)", options)
-    o[[n(o)]] = selectInput(ns("sitht"), "Sitting height (cm)", options)
-    o[[n(o)]] = selectInput(ns("legln"), "Leg length (cm)", options)
+    options <-  c('N/A', column_options)
+    add_tag(selectInput(ns("height"), "Height (cm)", options))
+    add_tag(selectInput(ns("weight"), "Weight (kg)", options))
+    add_tag(selectInput(ns("bmi"), "BMI (kg/m^2)", options))
+    add_tag(selectInput(ns("sitht"), "Sitting height (cm)", options))
+    add_tag(selectInput(ns("leglen"), "Leg length (cm)", options))
     
-    o[[n(o)]] = selectInput(ns("to_add"), "Calculate", c("SDS", "Centile", "% Predicted", "Predicted", "% CV", "Skewness"), selected = "SDS", multiple = TRUE, selectize = TRUE)
-    o[[n(o)]] = actionButton(ns('apply'), 'Apply')
-    # output[[nextidx(output)]] = fluidPage(actionButton(ns('Reset'), 'Reset'), actionButton(ns('Apply'), 'Apply') )
-    o[[n(o)]] = downloadButton(ns("downloadData"), "Download")
+    add_tag(selectInput(ns("to_add"), "Calculate", c("SDS", "Centile", "% Predicted", "Predicted", "% CV", "Skewness"), selected = "SDS", multiple = TRUE, selectize = TRUE))
+    add_tag(actionButton(ns('apply'), 'Apply'))
+    add_tag(downloadButton(ns("downloadData"), "Download"))
     
-    o
+    output_tags
   })
   
+  # when the 'apply' button is clicked
   observeEvent(input$apply, {
     df <- isolate(original_data$df)
+    # loop over every measurement 
     for (item in measurement_names) {
-      print(item)
+      # do the calculation for the measurement
       df <- get_observer(item$name, df)
     }
     original_data$df <- df
@@ -139,13 +139,20 @@
   # TODO: populate from selected reference sheet
   measurement_names <- list(
     height=list(name='height', code='ht'),
-    weight=list(name='weight', code='wt')
+    weight=list(name='weight', code='wt'),
+    bmi=list(name='bmi', code='bmi'),
+    sitht=list(name='sitht', code='sitht'),
+    leglen=list(name='leglen', code='leglen')
   )
   
   get_observer <- function(measurement_name, df) {
       value <- input[[measurement_name]]
       input_name <- measurement_names[[measurement_name]]$name
       code_name <- measurement_names[[measurement_name]]$code
+      
+      new_col <- function(stat, column, code_name) {
+        paste('LMS', stat, column, code_name, sep = '_')
+      }
       
       if (!is.null(value) && value != 'N/A') {
         column = strsplit(value, split=" ")[[1]][2]
@@ -154,40 +161,28 @@
         
         lms_stats <- .measurement_to_scores(age_column_or_value, sex_column_or_value, code_name, df[, column])
         
-        # centile <- sitar::z2cent(sds)
-        # perc_predicted <- 100 * lms_stats$value / lms_stats$M
-        # predicted <- lms_stats$M
-        # perc_cv <- lms_stats$S * 100
-        # skewness <- lms_stats$L
-        
         if ('SDS' %in% input$to_add) {
-          new_column = paste('LMS', 'SDS', column, code_name, sep='_')
-          df[[new_column]] <- round(lms_stats$z, digits = 2)
+          df[[new_col('SDS', column, code_name)]] <- .get_sds(lms_stats)
         }
         
         if ('Centile' %in% input$to_add) {
-          new_column = paste('LMS', 'Centile', column, code_name, sep='_')
-          df[[new_column]] <- round(sitar::z2cent(lms_stats$z), digits=2)
+          df[[new_col('Centile', column, code_name)]] <- .get_centile(lms_stats)
         }
         
         if ('% Predicted' %in% input$to_add) {
-          new_column = paste('LMS', 'PercPredicted', column, code_name, sep='_')
-          df[[new_column]] <- round(100 * lms_stats$value / lms_stats$M, digits=2)
+          df[[new_col('PercPredicted', column, code_name)]] <- .get_perc_predicted(lms_stats)
         }
         
         if ('Predicted' %in% input$to_add) {
-          new_column = paste('LMS', 'Predicted', column, code_name, sep='_')
-          df[[new_column]] <- round(lms_stats$M, digits=2)
+          df[[new_col('Predicted', column, code_name)]] <- .get_predicted(lms_stats)
         }
         
         if ('% CV' %in% input$to_add) {
-          new_column = paste('LMS', 'PercCV', column, code_name, sep='_')
-          df[[new_column]] <- round(lms_stats$S * 100, digits=2)
+          df[[new_col('PercCV', column, code_name)]] <- .get_perc_cv(lms_stats)
         }
         
         if ('Skewness' %in% input$to_add) {
-          new_column = paste('LMS', 'Skewness', column, code_name, sep='_')
-          df[[new_column]] <- round(lms_stats$L, digits=2)
+          df[[new_col('Skewness', column, code_name)]] <- .get_skewness(lms_stats)
         }
         
         # fix the column order if it didn't exist already
