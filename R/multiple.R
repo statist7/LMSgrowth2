@@ -55,7 +55,7 @@
   
   
   get_selected <- function(to_match, default) {
-    match <- original_columns() %>% isolate %>% str_detect(to_match) %>% which
+    match <- original_columns() %>% isolate %>% stringr::str_detect(to_match) %>% which
     { if (length(match) > 0) paste('[Column]', original_columns()[match[1]]) else default }
   }
   
