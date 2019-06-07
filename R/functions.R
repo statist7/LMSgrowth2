@@ -5,7 +5,7 @@
 }
 
 #' calculates the duration in days of the arguments
-.duration_in_years <- function(years, months, weeks, days) {
+.duration_in_years <- function(years=c(0), months=c(0), weeks=c(0), days=c(0)) {
   years <- .get_numeric(years, 0)
   months <- .get_numeric(months, 0)
   weeks <- .get_numeric(weeks, 0)

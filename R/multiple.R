@@ -79,7 +79,7 @@
     # age
     selected <- get_selected('[Aa]ge|[Yy]ears|[Dd]ays', '')
     selectInput(ns("age_source"), "Age", column_options, selected = selected) %>% add_tag
-    selectInput(ns("age_unit"), "Unit of age", c('Days', 'Weeks', 'Months', 'Years'), selected = 'years') %>% add_tag
+    selectInput(ns("age_unit"), "Unit of age", c('Days', 'Weeks', 'Months', 'Years'), selected = 'Years') %>% add_tag
     
     # only display measurement selection if we have loaded a dataframe
     options <-  c('N/A', column_options)
@@ -121,7 +121,17 @@
   get_age <- function() {
       df <- isolate(original_data$df)
       age_column_or_value <- isolate(input$age_source)
+      age_unit <- stringr::str_to_lower(isolate(input$age_unit))
+
       age_column = df[, strsplit(age_column_or_value, split=" ")[[1]][[2]]]
+
+      # transform age into years if necessary
+      if (age_unit != 'years') {
+          args <- list()
+          args[[ age_unit ]] <- age_column
+          age_column <- do.call(.duration_in_years, args)
+      }
+
       return(age_column)
   }
   
@@ -135,11 +145,22 @@
     leglen=list(name='leglen', code='leglen')
   )
   
+  # list of the various statistics and the associated function
+  calculations <- list(
+    list(name='SDS', column_name='SDS', func=.get_sds),
+    list(name='Centile', column_name='Centile', func=.get_centile),
+    list(name='% Predicted', column_name='PercPredicted', func=.get_perc_predicted),
+    list(name='Predicted', column_name='Predicted', func=.get_predicted),
+    list(name='% CV', column_name='PercCV', func=.get_perc_cv),
+    list(name='Skewness', column_name='Skewness', func=.get_skewness)
+  )
+  
   get_observer <- function(measurement_name, df) {
       value <- input[[measurement_name]]
       input_name <- measurement_names[[measurement_name]]$name
       code_name <- measurement_names[[measurement_name]]$code
       
+      # a function that returns column name for a given statistics
       new_col <- function(stat, column, code_name) {
         paste('LMS', stat, column, code_name, sep = '_')
       }
@@ -148,39 +169,18 @@
         column = strsplit(value, split=" ")[[1]][2]
         sex_column_or_value <- get_sex()
         age_column_or_value <- get_age() 
-        # TODO: convert age into year units
         
         lms_stats <- .measurement_to_scores(age_column_or_value, sex_column_or_value, code_name, df[, column])
-        
-        if ('SDS' %in% input$to_add) {
-          df[[new_col('SDS', column, code_name)]] <- .get_sds(lms_stats)
+
+        # loop through each of the possible statistics and calculate if necessary
+        for (calc in calculations) {
+            # if the user asked for this statistics
+            if (calc$name %in% input$to_add) {
+                # calculate using the appropriate function and add a new column to the dataframe
+                df[[new_col(calc$column_name, column, code_name)]] <- calc$func(lms_stats)
+            }
         }
-        
-        if ('Centile' %in% input$to_add) {
-          df[[new_col('Centile', column, code_name)]] <- .get_centile(lms_stats)
-        }
-        
-        if ('% Predicted' %in% input$to_add) {
-          df[[new_col('PercPredicted', column, code_name)]] <- .get_perc_predicted(lms_stats)
-        }
-        
-        if ('Predicted' %in% input$to_add) {
-          df[[new_col('Predicted', column, code_name)]] <- .get_predicted(lms_stats)
-        }
-        
-        if ('% CV' %in% input$to_add) {
-          df[[new_col('PercCV', column, code_name)]] <- .get_perc_cv(lms_stats)
-        }
-        
-        if ('Skewness' %in% input$to_add) {
-          df[[new_col('Skewness', column, code_name)]] <- .get_skewness(lms_stats)
-        }
-        
-        # fix the column order if it didn't exist already
-        # if (is.na(match(new_column, columns))) {
-        #   new_order <- append(columns, new_column, which(columns==column))  
-        #   df <- df[new_order]
-        # }
+
       } else {
         # remove old columns
         df <- df[, !colnames(df) %in% measurement_names[[measurement_name]]$columns]
