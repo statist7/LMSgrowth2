@@ -85,9 +85,9 @@
     selectInput(ns("sex"),  label = "Sex",  choices = options,  selected = selected, multiple = FALSE) %>% add_tag
 
     # age
-    selected <- get_selected('[Aa]ge|[Yy]ears|[Dd]ays', '')
+    selected <- get_selected('[Aa]ge|[Yy]ears|[Dd]ays|[Ww]eeks', '')
     selectInput(ns("age_source"), "Age", column_options, selected = selected) %>% add_tag
-    selectInput(ns("age_unit"), "Unit of age", c('Days', 'Weeks', 'Months', 'Years'), selected = 'Years') %>% add_tag
+    selectInput(ns("age_unit"), "Unit of age", c('Days', 'Weeks', 'Months', 'Years'), selected = selected) %>% add_tag
 
     options <-  c('N/A', column_options)
     selectInput(ns("height"), "Height (cm)", options, selected = get_selected('[Hh]eight', 'N/A')) %>% add_tag
