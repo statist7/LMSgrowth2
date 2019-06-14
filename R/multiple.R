@@ -113,7 +113,6 @@
     df <- isolate(original_data$df)
     # loop over every measurement
     for (item in measurement_names) {
-      # do the calculation for the measurement
       df <- do_calculation_for_measurement(item$name, df)
     }
     original_data$df <- df

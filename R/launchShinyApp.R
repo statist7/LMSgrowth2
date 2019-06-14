@@ -5,7 +5,7 @@ source('R/example.R', local=TRUE)
 source('R/multiple.R', local=TRUE)
 
 # Main UI for the tabs ########################################################
-.ui <-tagList(
+.ui <- tagList(
     navbarPage(
       "LMSgrowth2",
       tabPanel("Calculator", .calculatorUI("calculator")),
