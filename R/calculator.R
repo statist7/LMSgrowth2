@@ -18,11 +18,11 @@ source('R/functions.R', local = TRUE)
         numericInput(ns("age_weeks"), "weeks", value="", min=0),
         numericInput(ns("age_days"), "days", value="", min=0),
         h4("Measurements"),
-        numericInput(ns("height"), "Height (cm)", value="", min = 0, max = 300),
-        numericInput(ns("weight"), "Weight (kg)", value="", min = 0, max = 300),
-        numericInput(ns("bmi"), "BMI (kg/m^2)", value="", min = 0, max = 300),
-        numericInput(ns("sitht"), "Sitting height (cm)", value="", min = 0, max = 300),
-        numericInput(ns("legln"), "Leg length (cm)", value="", min = 0, max = 300)
+        numericInput(ns("height"), "Height (cm)", value="", min = 20, max = 300),
+        numericInput(ns("weight"), "Weight (kg)", value="", min = 0.1, max = 300),
+        numericInput(ns("bmi"), "BMI (kg/m^2)", value="", min = 1, max = 300),
+        numericInput(ns("sitht"), "Sitting height (cm)", value="", min = 10, max = 300),
+        numericInput(ns("leglen"), "Leg length (cm)", value="", min = 10, max = 300)
       ),
       
       # Show a plot of the generated distribution
@@ -61,6 +61,16 @@ source('R/functions.R', local = TRUE)
   observeEvent(input$height, { set_bmi() })
   observeEvent(input$weight, { set_bmi() })
 
+  set_leglen <- function() {
+    if (is.numeric(input$height) && is.numeric(input$sitht)) {
+      leglen <- input$height - input$sitht
+      updateNumericInput(session, "leglen", value=leglen)
+    }
+  }
+
+  observeEvent(input$height, { set_leglen() })
+  observeEvent(input$sitht, { set_leglen() })
+
   output$height_info <- renderText({
     if (is.numeric(input$height)) {
       lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'ht', input$height)
@@ -90,8 +100,8 @@ source('R/functions.R', local = TRUE)
   })
   
   output$leglen_info <- renderText({
-    if (is.numeric(input$legln)) {
-      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'leglen', input$legln)
+    if (is.numeric(input$leglen)) {
+      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'leglen', input$leglen)
       .stats2string(lms_stats, "Leg length")
     }
   })
