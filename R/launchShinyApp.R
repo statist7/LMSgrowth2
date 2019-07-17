@@ -6,10 +6,13 @@ source('R/calculator.R', local=TRUE)
 source('R/example.R', local=TRUE)
 source('R/multiple.R', local=TRUE)
 source('R/lmsplot.R', local=TRUE)
-source('R/user_session.R', local=TRUE)
 
 # Cookie handling
 jsCode <- '
+  shinyjs.pageCol = function(params) {
+    $("body").css("background", params);
+  }
+  
   shinyjs.getcookies = function(params) {
     Shiny.setInputValue("jscookie", Cookies.get(), {priority: "event"});
   }
@@ -31,54 +34,51 @@ jsCode <- '
     Shiny.setInputValue("jscookie", Cookies.get(), {priority: "event"})
   }
 '
+jsCodeFunctions <- c('getcookies', 'setcookie', 'rmcookie', 'rmcookies', 'pageCol')
 
 # Main UI for the tabs ########################################################
 .ui <- tagList(
-    tags$head(tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.js")),
-    useShinyjs(),
-    extendShinyjs(text = jsCode, functions=c('getcookies', 'setcookie', 'rmcookie', 'rmcookies')),
-    navbarPage(
-      "LMSgrowth2",
-      tabPanel("Calculator", .calculatorUI("calculator")),
-      tabPanel("Multiple", .multipleUI("multiple")),
-      tabPanel("LMS dist", .lmsplotUI("lmsplot")),
-      tabPanel("Next", bootstrapPage("TODO")),
-      tabPanel("Next", bootstrapPage("TODO")),
-      tabPanel("Example", .exampleUI("example")),
-      tabPanel("User session", .usersessionUI("user_session"))
-    )
+  tags$head(tags$script(src="js.cookie.js")),
+  useShinyjs(),
+  extendShinyjs(text = jsCode, functions=jsCodeFunctions),
+  selectInput("col", "Colour:",
+              c("white", "yellow", "red", "blue", "purple")),
+  navbarPage(
+    "LMSgrowth2",
+    tabPanel("Calculator", .calculatorUI("calculator")),
+    tabPanel("Multiple", .multipleUI("multiple")),
+    tabPanel("LMS dist", .lmsplotUI("lmsplot")),
+    tabPanel("Next", bootstrapPage("TODO")),
+    tabPanel("Next", bootstrapPage("TODO")),
+    tabPanel("Example", .exampleUI("example"))
   )
+)
 
 # Shiny server logic ##########################################################
 .server <- function(input, output) {
-  # javascript cookie handling, used throughout
-  status <- reactiveVal(value = NULL)
-  
-  observe({
-    js$getcookies()
-    status(input$jscookie)
-  })
-  
-  output$output <- renderPrint({
-    status()
-  })
-  
-  observeEvent(input$login, {
-    js$setcookie(name=stringi::stri_rand_strings(1, 5, pattern='[A-Za-z]'), value=runif(1))
-  })
-  
-  observeEvent(input$logout, {
-    js$rmcookies()
-  })
-  
   callModule(.calculator, "calculator", stringAsFactors=FALSE)
   callModule(.multiple, "multiple", stringAsFactors=FALSE)
   callModule(.lmsplot, "lmsplot", stringAsFactors=FALSE)
   callModule(.example, "example", stringAsFactors=FALSE)
-  callModule(.usersession, "user_session", stringAsFactors=FALSE)
+  
+  # javascript cookie handling, used throughout
+  status <- reactiveVal(value = NULL)
+  observeEvent(input$col, {
+    js$pageCol(input$col)
+  })
 }
 
 launchApp <- function() {
+  loadjs <- function() {
+    require(shinyjs)
+    useShinyjs()
+    extendShinyjs(text = jsCode, functions=jsCodeFunctions)
+  }
   
-  shinyApp(ui = .ui, server = .server)
+  shinyApp(ui = .ui, server = .server, onStart = loadjs)
+}
+
+
+runPackage <- function() {
+  shiny::runApp(system.file('shinyApp', package='LMSgrowth2'))
 }

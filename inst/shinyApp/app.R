@@ -1,1 +1,1 @@
-LMSgrowth2::launchShinyApp()
+LMSgrowth2::launchApp()
