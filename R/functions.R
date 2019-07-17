@@ -49,6 +49,13 @@
   lms_stats$L
 }
 
+.get_references <- function() {
+  list(
+    list(name='uk90', data=sitar::uk90, description='UK 1990 growth reference'),
+    list(name='ukwhopt', data=sitar::ukwhopt, description='UK-WHO growth reference including preterm')
+  )
+}
+
 #' constructs a string to display sds & other information about a measurement
 .stats2string <- function(lms_stats, title="") {
   # quick and dirty output for now
