@@ -33,14 +33,15 @@ source('R/functions.R', local = TRUE)
         verbatimTextOutput(ns("weight_info")),
         verbatimTextOutput(ns("bmi_info")),
         verbatimTextOutput(ns("sitht_info")),
-        verbatimTextOutput(ns("leglen_info"))
+        verbatimTextOutput(ns("leglen_info")),
+        textOutput(ns("output_cookie"))
       )
     )
   )
 }
 
 # Calculator tab server #######################################################
-.calculator <- function(input, output, session, stringAsFactors) {
+.calculator <- function(input, output, session, globals) {
   age_in_years <- reactive({
     .duration_in_years(input$age_years, input$age_months, input$age_weeks, input$age_days)
   })
@@ -51,6 +52,19 @@ source('R/functions.R', local = TRUE)
     }
   })
   
+  output$output_cookie <- renderText({
+    print(globals$getGlobalValue1())
+    print(globals$getGlobalValue2())
+    print(globals$getGlobalValue3())
+    if (globals$getGlobalValue1() != "testing") {
+      globals$setGlobalValue3("value1 is not testing")
+    } else {
+      globals$setGlobalValue3("value1 is testing")
+    }
+    globals$getGlobalValue1()
+  })
+  
+
   set_bmi <- function() {
     if (is.numeric(input$height) && is.numeric(input$weight)) {
       bmi <- input$weight/(input$height/100)^2

@@ -23,7 +23,7 @@
 }
 
 # Server
-.multiple <- function(input, output, session, stringAsFactors) {
+.multiple <- function(input, output, session, globals) {
   # To use `renderUI` within modules, we need to wrap names with `ns()`
   ns <- session$ns
 
