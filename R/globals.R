@@ -1,5 +1,7 @@
 require(shinyjs)
 
+source('R/functions.R', local = TRUE)
+
 # The globals shiny module is used to store global state for the application
 # Reading/writing of cookies should be done here to be picked up by other modules
 # in the application
@@ -8,39 +10,30 @@ require(shinyjs)
   ns <- NS(id)
   
   fluidPage(
-    textInput(ns("globalValue1"), "globalValue1", value="testing"),
-    selectInput(ns("col"), "Colour:",
-                c("white", "yellow", "red", "blue", "purple"), selected="white"),
-    textOutput(ns("testout"))
+    selectInput(ns("growth_ref"), label = "Growth reference", choices=c())
   )
 }
 
 .globals <- function(input, output, session) {
+  observe({
+    refs <- .get_references()
+    updateSelectInput(session, "growth_ref", label="Growth reference", choices=refs, selected = 'uk90')
+  })
   
   stash <- reactiveValues()
   
-  observeEvent(input$globalValue1, {
-    stash$globalValue1 <- input$globalValue1
+  observeEvent(input$growth_ref, {
+    stash$growthReference <- input$growth_ref
   })
   
-  observeEvent(input$col, {
-    js$pageCol(input$col)
-    stash$globalValue2 <- input$col
-  })
-  
-  setGlobalValue3 <- function(value) {
-    stash$globalValue3 <- value
-  }
-  
-  output$testout <- renderText({
-    stash$globalValue3
-  })
+  # setGlobalValue3 <- function(value) {
+  #   stash$globalValue3 <- value
+  # }
   
   out <- list(
-    getGlobalValue1 = reactive(stash$globalValue1),
-    getGlobalValue2 = reactive(stash$globalValue2),
-    getGlobalValue3 = reactive(stash$globalValue3),
-    setGlobalValue3 = setGlobalValue3
+    getGrowthReference = reactive(stash$growthReference)
+    # getGlobalValue3 = reactive(stash$globalValue3),
+    # setGlobalValue3 = setGlobalValue3
     )
   return(out)
 }

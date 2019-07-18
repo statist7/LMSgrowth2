@@ -19,10 +19,17 @@
 }
 
 #' returns the SDS and L M & S values for a given measurement 
-.measurement_to_scores <- function(age_y, sex, measure, value) {
-  z <- sitar::LMS2z(age_y, value, sex, measure=measure, ref=sitar::uk90, LMStable = TRUE)
+.measurement_to_scores <- function(age_y, sex, measure, value, ref) {
+  selected_ref <- getExportedValue('sitar', ref)
+  column_name <- paste('L.', measure, sep='')
+  if (!(column_name %in% names(selected_ref))) {
+    return(NULL)
+  }
+
+  z <- sitar::LMS2z(age_y, value, sex, measure=measure, ref=selected_ref, LMStable = TRUE)
   lmstable <- attr(z, "LMStable")
-  list(z=z, L=lmstable$L, M=lmstable$M, S=lmstable$S, value=value, measure=measure)
+  list(z=z, L=lmstable$L, M=lmstable$M, S=lmstable$S, value=value, measure=measure)  
+  
 }
 
 .get_sds <- function(lms_stats) {
@@ -51,8 +58,10 @@
 
 .get_references <- function() {
   list(
-    list(name='uk90', data=sitar::uk90, description='UK 1990 growth reference'),
-    list(name='ukwhopt', data=sitar::ukwhopt, description='UK-WHO growth reference including preterm')
+    'Berkeley Child Guidance Study' = 'berkeley',
+    'UK 1990 growth reference' = 'uk90',
+    'UK-WHO growth reference (w/ preterm)' = 'ukwhopt',
+    'WHO 2006 growth standard' = 'who06'
   )
 }
 

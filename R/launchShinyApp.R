@@ -4,7 +4,6 @@ library(shinyjs)
 source('R/calculator.R', local=TRUE)
 source('R/example.R', local=TRUE)
 source('R/multiple.R', local=TRUE)
-source('R/lmsplot.R', local=TRUE)
 source('R/globals.R', local=TRUE)
 
 
