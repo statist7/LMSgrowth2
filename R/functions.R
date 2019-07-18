@@ -58,7 +58,7 @@
 
 .get_references <- function() {
   list(
-    'Berkeley Child Guidance Study' = 'berkeley',
+    # 'Berkeley Child Guidance Study' = 'berkeley',
     'UK 1990 growth reference' = 'uk90',
     'UK-WHO growth reference (w/ preterm)' = 'ukwhopt',
     'WHO 2006 growth standard' = 'who06'
