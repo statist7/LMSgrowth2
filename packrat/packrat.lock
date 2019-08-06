@@ -144,8 +144,8 @@ Requires: magrittr, rlang
 
 Package: quantreg
 Source: CRAN
-Version: 5.38
-Hash: 80e9edd049e34ea6496f6e4d2640d3e0
+Version: 5.42.1
+Hash: 88c3fda02d01f1b056f346073c37e9fc
 Requires: MatrixModels, SparseM
 
 Package: rlang
@@ -165,6 +165,12 @@ Version: 1.3.2
 Hash: a48cf01573400333efa51dc999ab6447
 Requires: R6, crayon, digest, htmltools, httpuv, jsonlite, later, mime,
     promises, rlang, sourcetools, xtable
+
+Package: shinyjs
+Source: CRAN
+Version: 1.0
+Hash: ea95f751025e50227a96100be35e970b
+Requires: digest, htmltools, jsonlite, shiny
 
 Package: sitar
 Source: CRAN
