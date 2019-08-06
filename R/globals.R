@@ -15,14 +15,15 @@ source('R/functions.R', local = TRUE)
 }
 
 .globals <- function(input, output, session) {
-  observe({
-    refs <- .get_references()
-    updateSelectInput(session, "growth_ref", label="Growth reference", choices=refs, selected = 'uk90')
-  })
-  
   stash <- reactiveValues()
   
+  observe({
+    refs <- .get_references()
+    updateSelectInput(session, "growth_ref", label="Growth reference", choices=refs, selected = input$jscookie$growthRef)
+  })
+
   observeEvent(input$growth_ref, {
+    js$setcookie(name='growthRef', value=input$growth_ref)
     stash$growthReference <- input$growth_ref
   })
   
