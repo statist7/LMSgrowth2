@@ -10,7 +10,7 @@
   months <- .get_numeric(months, 0)
   weeks <- .get_numeric(weeks, 0)
   days <- .get_numeric(days, 0)
-  (years) + (months / 12) + (weeks / 52) + (days / 365.25)
+  (years) + (months / 12) + (weeks * 7 / 365.25) + (days / 365.25)
 }
 
 #' calculates the duration in days of the arguments
