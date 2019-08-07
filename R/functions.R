@@ -18,6 +18,11 @@
   .duration_in_years(years, months, weeks, days) * 365.25
 }
 
+#' calculates the difference between to dates in years
+.date_diff <- function(date1, date2) {
+  as.numeric(difftime(as.Date(date1), as.Date(date2), unit="days")) / 365.25  
+}
+
 #' returns the SDS and L M & S values for a given measurement 
 .measurement_to_scores <- function(age_y, sex, measure, value, ref) {
   selected_ref <- getExportedValue('sitar', ref)
