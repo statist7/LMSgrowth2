@@ -8,7 +8,17 @@
     sidebarLayout(
       sidebarPanel(
         h3("Measurements to SDS"),
-
+        
+        conditionalPanel(
+          condition = "output['multiple-uploaded'] == false",
+          textInput(ns('notreadytowork'), 'Not ready to work')
+        ),
+        
+        conditionalPanel(
+          condition = "output['multiple-uploaded'] == true",
+          textInput(ns('readytowork'), 'Ready to work!')
+        ),
+        
         uiOutput(ns("file_input")),
 
         # after uploading data, we show:
@@ -32,7 +42,8 @@
     df = NULL,
     initialised = FALSE
   )
-
+  
+  
   # the original columns in the uploaded spreadhsheet
   original_columns <- reactiveVal(NULL)
 
@@ -43,6 +54,7 @@
       original_columns(names(df))
       original_data$df <- df
       original_data$initialised = TRUE
+      uploaded = TRUE
     }
   })
 
@@ -208,6 +220,10 @@
       write.csv(original_data$df, file, row.names = FALSE)
     }
   )
+  
+  output$uploaded <- reactive(original_data$initialised)
+  outputOptions(output, "uploaded", suspendWhenHidden = FALSE)
+  
 
 }
 
