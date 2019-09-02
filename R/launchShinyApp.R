@@ -1,29 +1,48 @@
 library(shiny)
+library(shinyjs)
 
 source('R/calculator.R', local=TRUE)
 source('R/example.R', local=TRUE)
 source('R/multiple.R', local=TRUE)
+source('R/globals.R', local=TRUE)
+
+
+
+# Load Javascript functions because can't get 
+# the extendShinyjs(script='...') working in a package
+source('R/javascript.R', local=TRUE)
 
 # Main UI for the tabs ########################################################
 .ui <- tagList(
-    navbarPage(
-      "LMSgrowth2",
-      tabPanel("Calculator", .calculatorUI("calculator")),
-      tabPanel("Multiple", .multipleUI("multiple")),
-      tabPanel("Next", bootstrapPage("TODO")),
-      tabPanel("Next", bootstrapPage("TODO")),
-      tabPanel("Example", .exampleUI("example"))
-    )  
+  tags$head(tags$script(src="js.cookie.js")),
+  useShinyjs(),
+  extendShinyjs(text = .jsCode, functions = .jsCodeFunctions),
+  navbarPage(
+    "LMSgrowth2",
+    tabPanel("Calculator", .calculatorUI("calculator")),
+    tabPanel("Multiple", .multipleUI("multiple")),
+    tabPanel("Example", .exampleUI("example")),
+    tabPanel("Preferences", .globalsUI("globals"))
   )
-  
+)
 
 # Shiny server logic ##########################################################
-.server <- function(input, output) {
-  callModule(.calculator, "calculator", stringAsFactors=FALSE)
-  callModule(.multiple, "multiple", stringAsFactors=FALSE)
-  callModule(.example, "example", stringAsFactors=FALSE)
+.server <- function(input, output, session) {
+  globals <- callModule(.globals, "globals")
+  callModule(.calculator, "calculator", globals = globals)
+  callModule(.multiple, "multiple", globals = globals)
+  callModule(.example, "example", globals = globals)
 }
 
 launchApp <- function() {
-  shinyApp(ui = .ui, server = .server)
+  loadjs <- function() {
+    require(shinyjs)
+    useShinyjs()
+    extendShinyjs(text = .jsCode, functions = .jsCodeFunctions)
+  }
+  shinyApp(ui = .ui, server = .server, onStart = loadjs)
+}
+
+runPackage <- function() {
+  shiny::runApp(system.file('shinyApp', package='LMSgrowth2'))
 }

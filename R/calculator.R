@@ -27,7 +27,8 @@ source('R/functions.R', local = TRUE)
       
       # Show a plot of the generated distribution
       mainPanel(
-        p("(Using British1990 reference)"),
+        p('Selected growth reference:'),
+        textOutput(ns("growth_ref")),
         verbatimTextOutput(ns("age_info")),
         verbatimTextOutput(ns("height_info")),
         verbatimTextOutput(ns("weight_info")),
@@ -40,7 +41,7 @@ source('R/functions.R', local = TRUE)
 }
 
 # Calculator tab server #######################################################
-.calculator <- function(input, output, session, stringAsFactors) {
+.calculator <- function(input, output, session, globals) {
   age_in_years <- reactive({
     .duration_in_years(input$age_years, input$age_months, input$age_weeks, input$age_days)
   })
@@ -51,6 +52,11 @@ source('R/functions.R', local = TRUE)
     }
   })
   
+  output$growth_ref <- renderText({
+    globals$getGrowthReference()
+  })
+  
+
   set_bmi <- function() {
     if (is.numeric(input$height) && is.numeric(input$weight)) {
       bmi <- input$weight/(input$height/100)^2
@@ -73,35 +79,35 @@ source('R/functions.R', local = TRUE)
 
   output$height_info <- renderText({
     if (is.numeric(input$height)) {
-      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'ht', input$height)
+      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'ht', input$height, globals$getGrowthReference())
       .stats2string(lms_stats, "Height")
     }
   })
   
   output$weight_info <- renderText({
     if (is.numeric(input$weight)) {
-      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'wt', input$weight)
+      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'wt', input$weight, globals$getGrowthReference())
       .stats2string(lms_stats, "Weight")
     }
   })
   
   output$bmi_info <- renderText({
     if (is.numeric(input$bmi)) {
-      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'bmi', input$bmi)
+      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'bmi', input$bmi, globals$getGrowthReference())
       .stats2string(lms_stats, "BMI")
     }
   })
   
   output$sitht_info <- renderText({
     if (is.numeric(input$sitht)) {
-      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'sitht', input$sitht)
+      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'sitht', input$sitht, globals$getGrowthReference())
       .stats2string(lms_stats, "Sitting height")
     }
   })
   
   output$leglen_info <- renderText({
     if (is.numeric(input$leglen)) {
-      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'leglen', input$leglen)
+      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'leglen', input$leglen, globals$getGrowthReference())
       .stats2string(lms_stats, "Leg length")
     }
   })

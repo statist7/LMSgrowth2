@@ -16,8 +16,9 @@
 }
 
 # Example server logic ########################################################
-.example <- function(input, output, session, stringAsFactors) {
+.example <- function(input, output, session, globals) {
   ns <- session$ns
+  
   output$greeting <- renderText({
     paste('Hello,', input$name)
   })
