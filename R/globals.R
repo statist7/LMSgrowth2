@@ -10,18 +10,27 @@ source('R/functions.R', local = TRUE)
   ns <- NS(id)
   
   fluidPage(
-    selectInput(ns("growth_ref"), label = "Growth reference", choices=c())
+    selectInput(ns("growth_ref"), label = "Growth reference", choices = .get_references())
   )
 }
 
 .globals <- function(input, output, session) {
+  # store the page load status
+  status <- reactiveValues(loaded=FALSE)
+  
+  # object to store global values
   stash <- reactiveValues()
   
+  # this block only executed once on page load to apply saved cookie state, if any
   observe({
-    refs <- .get_references()
-    updateSelectInput(session, "growth_ref", label="Growth reference", choices=refs, selected = input$jscookie$growthRef)
+    if (!status$loaded & !is.null(input$jscookie[["growthRef"]])) {
+      status$loaded <- TRUE
+      saved_ref <- isolate(input$jscookie$growthRef)
+      updateSelectInput(session, "growth_ref", label="Growth reference", selected = saved_ref)
+    }
   })
 
+  # if user selects growth_ref, then update the cookie
   observeEvent(input$growth_ref, {
     js$setcookie(name='growthRef', value=input$growth_ref)
     stash$growthReference <- input$growth_ref
