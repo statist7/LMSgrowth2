@@ -24,5 +24,5 @@ install.packages(c('devtools', 'usethis', 'testthat'))
 - Load the LMSgrowth2 package for development
     - Build > Load All (Ctrl+Shift+L)
     - (or from tab) Build > Load All
-    - Type `launchApp()` in the R console to test
+    - Type `LMSgrowth2::runPackage()` in the R console to run
 
