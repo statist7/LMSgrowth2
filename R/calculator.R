@@ -12,11 +12,19 @@ source('R/functions.R', local = TRUE)
         radioButtons(ns("sex"), label = h4("Sex"),
                      choices = list("Male" = 1, "Female" = 2), 
                      selected = 1),
-        h4("Age"),
-        numericInput(ns("age_years"), "years", value="", min=0),
-        numericInput(ns("age_months"), "months", value="", min=0),
-        numericInput(ns("age_weeks"), "weeks", value="", min=0),
-        numericInput(ns("age_days"), "days", value="", min=0),
+        radioButtons(ns("age_input"), choices = list("Age" = "age", "Dates" = "dates"), selected = "age", label = h4("Age"), inline=TRUE),
+        conditionalPanel(
+          condition = "input['calculator-age_input'] == 'age'",
+          numericInput(ns("age_years"), "years", value="", min=0),
+          numericInput(ns("age_months"), "months", value="", min=0),
+          numericInput(ns("age_weeks"), "weeks", value="", min=0),
+          numericInput(ns("age_days"), "days", value="", min=0)
+        ),
+        conditionalPanel(
+          condition = "input['calculator-age_input'] == 'dates'",
+          dateInput(ns("date_of_birth"), "Birth"),
+          dateInput(ns("date_of_measurement"), "Measurement")
+        ),
         h4("Measurements"),
         numericInput(ns("height"), "Height (cm)", value="", min = 20, max = 300),
         numericInput(ns("weight"), "Weight (kg)", value="", min = 0.1, max = 300),
@@ -43,7 +51,11 @@ source('R/functions.R', local = TRUE)
 # Calculator tab server #######################################################
 .calculator <- function(input, output, session, globals) {
   age_in_years <- reactive({
-    .duration_in_years(input$age_years, input$age_months, input$age_weeks, input$age_days)
+    if (input$age_input == "age") {
+      .duration_in_years(input$age_years, input$age_months, input$age_weeks, input$age_days)
+    } else {
+      .date_diff(input$date_of_measurement, input$date_of_birth)
+    }
   })
   
   output$age_info <- renderText({

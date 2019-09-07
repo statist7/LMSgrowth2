@@ -8,12 +8,32 @@
     sidebarLayout(
       sidebarPanel(
         h3("Measurements to SDS"),
-
-        uiOutput(ns("file_input")),
-
-        # after uploading data, we show:
-        uiOutput(ns("measurement_form"))
+        
+        conditionalPanel(
+          condition = "output['multiple-uploaded'] == false",
+          fileInput(ns('file'), 'Upload data file')
         ),
+        
+        conditionalPanel(
+          condition = "output['multiple-uploaded'] == true",
+          selectInput(ns("sex"),  label = "Sex",  choices = c('NOT POPULATED')),
+          selectInput(ns("age_source"), "Age", c('NOT POPULATED')),
+          selectInput(ns("age_unit"), "Unit of age", choices = c('Days', 'Weeks', 'Months', 'Years')),
+          selectInput(ns("height"), "Height (cm)", c('NOT POPULATED')),
+          selectInput(ns("weight"), "Weight (kg)", c('NOT POPULATED')),
+          selectInput(ns("bmi"), "BMI (kg/m^2)", c('NOT POPULATED')),
+          selectInput(ns("sitht"), "Sitting height (cm)", c('NOT POPULATED')),
+          selectInput(ns("leglen"), "Leg length (cm)", c('NOT POPULATED')),
+          selectInput(ns("to_add"),
+                      "Calculate",
+                      c("SDS", "Centile", "% Predicted", "Predicted", "% CV", "Skewness"),
+                      selected = "SDS",
+                      multiple = TRUE,
+                      selectize = TRUE),
+          actionButton(ns('apply'), 'Apply'),
+          downloadButton(ns("download_data"), "Download")
+        )
+      ),
 
       mainPanel(
         div(style='height:600px; overflow-y: scroll', tableOutput(ns("table")))
@@ -32,26 +52,39 @@
     df = NULL,
     initialised = FALSE
   )
-
+  
   # the original columns in the uploaded spreadhsheet
   original_columns <- reactiveVal(NULL)
 
-  # upload the data and save a local copy of the dataframe
+  # save uploaded data and update options
   observe({
     if(!is.null(input$file)) {
       df <- as.data.frame(read.csv(input$file$datapath))
       original_columns(names(df))
       original_data$df <- df
       original_data$initialised = TRUE
-    }
-  })
-
-  # hide the file input once we've got the data frame saved locally
-  output$file_input <- renderUI({
-    if(is.null(original_data$df)) {
-      return(fileInput(ns('file'), 'Upload data file'))
-    } else {
-      return(NULL)
+      uploaded = TRUE
+      
+      # columns in the dataframe are prefixed
+      column_options <- paste('[Column]', isolate(original_columns()), sep = ' ')
+      
+      # update sex dropdown
+      selected <- get_selected('[Ss]ex|[Gg]ender', 'Male')
+      choices <-  c('Male', 'Female', column_options)
+      updateSelectInput(session, 'sex', choices = choices,  selected = selected)
+      
+      # update age
+      selected <- get_selected('[Aa]ge|[Yy]ears|[Dd]ays|[Ww]eeks', '')
+      updateSelectInput(session, 'age_source', choices = column_options, selected = selected)
+      selected <- get_selected('[Aa]ge|[Yy]ears|[Dd]ays|[Ww]eeks', 'Days')
+      
+      # update other choices
+      choices <-  c('N/A', column_options)
+      updateSelectInput(session, "height", choices = choices, selected = get_selected('[Hh]eight', 'N/A'))
+      updateSelectInput(session, "weight", choices = choices, selected = get_selected(c('[Ww]eight'), 'N/A'))
+      updateSelectInput(session, "bmi", choices = choices, selected = get_selected(c('BMI|bmi'), 'N/A'))
+      updateSelectInput(session, "sitht", choices = choices, 'N/A')
+      updateSelectInput(session, "leglen", choices = choices, 'N/A')
     }
   })
 
@@ -63,50 +96,6 @@
     match <- original_columns() %>% isolate %>% stringr::str_detect(to_match) %>% which
     { if (length(match) > 0) paste('[Column]', original_columns()[match[1]]) else default }
   }
-
-  # display the input form, populating the options from the uploaded data
-  output$measurement_form <- renderUI({
-    # don't show the form if user hasn't uploaded data
-    if (!original_data$initialised) return(NULL)
-
-    output_tags <- tagList()
-
-    # appends a tag to the output list
-    add_tag <- function(t) {
-      output_tags[[length(output_tags) + 1]] <<- t
-    }
-
-    # columns in the dataframe are prefixed
-    column_options <- paste('[Column]', isolate(original_columns()), sep = ' ')
-
-    # sex
-    selected <- get_selected('[Ss]ex|[Gg]ender', 'Male')
-    options <-  c('Male', 'Female', column_options)
-    selectInput(ns("sex"),  label = "Sex",  choices = options,  selected = selected, multiple = FALSE) %>% add_tag
-
-    # age
-    selected <- get_selected('[Aa]ge|[Yy]ears|[Dd]ays|[Ww]eeks', '')
-    selectInput(ns("age_source"), "Age", column_options, selected = selected) %>% add_tag
-    selectInput(ns("age_unit"), "Unit of age", c('Days', 'Weeks', 'Months', 'Years'), selected = selected) %>% add_tag
-
-    options <-  c('N/A', column_options)
-    selectInput(ns("height"), "Height (cm)", options, selected = get_selected('[Hh]eight', 'N/A')) %>% add_tag
-    selectInput(ns("weight"), "Weight (kg)", options, selected = get_selected(c('[Ww]eight'), 'N/A')) %>% add_tag
-    selectInput(ns("bmi"), "BMI (kg/m^2)", options, selected = get_selected(c('BMI|bmi'), 'N/A')) %>% add_tag
-    selectInput(ns("sitht"), "Sitting height (cm)", options, 'N/A') %>% add_tag
-    selectInput(ns("leglen"), "Leg length (cm)", options, 'N/A') %>% add_tag
-
-    selectInput(ns("to_add"),
-                "Calculate",
-                c("SDS", "Centile", "% Predicted", "Predicted", "% CV", "Skewness"),
-                selected = "SDS",
-                multiple = TRUE,
-                selectize = TRUE) %>% add_tag
-    actionButton(ns('apply'), 'Apply') %>% add_tag
-    downloadButton(ns("download_data"), "Download") %>% add_tag
-
-    output_tags
-  })
 
   # when the 'apply' button is clicked
   observeEvent(input$apply, {
@@ -208,6 +197,10 @@
       write.csv(original_data$df, file, row.names = FALSE)
     }
   )
+  
+  output$uploaded <- reactive(original_data$initialised)
+  outputOptions(output, "uploaded", suspendWhenHidden = FALSE)
+  
 
 }
 
