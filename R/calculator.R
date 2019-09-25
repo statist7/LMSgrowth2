@@ -98,7 +98,7 @@ source("R/functions.R", local = TRUE)
         output_name <- paste0(input_name, "_info")
         output[[output_name]] <- renderText({
           if (is.numeric(input[[input_name]])) {
-            lms_stats <- .measurement_to_scores(age_in_years(), input$sex, measure, input[[input_name]], globals$getGrowthReference())
+            lms_stats <- .measurement_to_scores(age_in_years(), input$sex, input_name, input[[input_name]], globals$getGrowthReference())
             .stats2string(lms_stats, output_name)
           }
         })
