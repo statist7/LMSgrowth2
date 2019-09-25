@@ -1,4 +1,4 @@
-source('R/functions.R', local = TRUE)
+source("R/functions.R", local = TRUE)
 
 # Measurement to SDS calculator ###############################################
 .calculatorUI <- function(id, label="calculator ui") {
@@ -26,23 +26,15 @@ source('R/functions.R', local = TRUE)
           dateInput(ns("date_of_measurement"), "Measurement")
         ),
         h4("Measurements"),
-        numericInput(ns("height"), "Height (cm)", value="", min = 20, max = 300),
-        numericInput(ns("weight"), "Weight (kg)", value="", min = 0.1, max = 300),
-        numericInput(ns("bmi"), "BMI (kg/m^2)", value="", min = 1, max = 300),
-        numericInput(ns("sitht"), "Sitting height (cm)", value="", min = 10, max = 300),
-        numericInput(ns("leglen"), "Leg length (cm)", value="", min = 10, max = 300)
+        uiOutput(ns("measurementInputs"))
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
-        p('Selected growth reference:'),
+        p("Selected growth reference:"),
         textOutput(ns("growth_ref")),
         verbatimTextOutput(ns("age_info")),
-        verbatimTextOutput(ns("height_info")),
-        verbatimTextOutput(ns("weight_info")),
-        verbatimTextOutput(ns("bmi_info")),
-        verbatimTextOutput(ns("sitht_info")),
-        verbatimTextOutput(ns("leglen_info"))
+        uiOutput(ns("measurementOutputs"))
       )
     )
   )
@@ -50,6 +42,12 @@ source('R/functions.R', local = TRUE)
 
 # Calculator tab server #######################################################
 .calculator <- function(input, output, session, globals) {
+  ns <- session$ns
+  
+  exists_and_is_numeric <- function(name) {
+    return(name %in% names(input) && is.numeric(input[[name]]))
+  }
+  
   age_in_years <- reactive({
     if (input$age_input == "age") {
       .duration_in_years(input$age_years, input$age_months, input$age_weeks, input$age_days)
@@ -64,63 +62,67 @@ source('R/functions.R', local = TRUE)
     }
   })
   
+  # display the currently selected growth reference
   output$growth_ref <- renderText({
     globals$getGrowthReference()
   })
   
+  # create an input box for each measurement in the growth reference
+  output$measurementInputs <- renderUI({
+    measures <- lapply(globals$getGrowthReferenceMeasures(),
+           function(measure) {
+             numericInput(ns(measure$code), 
+                          paste0(measure$description, " (", measure$unit, ")"),
+                          value=measure$default,
+                          min=measure$min,
+                          max=measure$max)
+           })
+    do.call(tagList, measures)
+  })
+  
+  # add an output box for each measurement in the growth reference
+  output$measurementOutputs <- renderUI({
+    measures <- lapply(globals$getGrowthReferenceMeasures(),
+                             function(measure) {
+                               output_name <- paste0(measure$code, "_info")
+                               verbatimTextOutput(ns(output_name))
+                             })
+    do.call(tagList, measures)
+  })
+  
+  # set up the reactive output for each measurement in the growth reference
+  observe({
+    for (measure in sapply(globals$getGrowthReferenceMeasures(), function(m) { m$code })) {
+      local({
+        input_name <- measure
+        output_name <- paste0(input_name, "_info")
+        output[[output_name]] <- renderText({
+          if (is.numeric(input[[input_name]])) {
+            lms_stats <- .measurement_to_scores(age_in_years(), input$sex, measure, input[[input_name]], globals$getGrowthReference())
+            .stats2string(lms_stats, output_name)
+          }
+        })
+      })
+    }
+  })
 
+  # autofill bmi if height and weight are given
   set_bmi <- function() {
-    if (is.numeric(input$height) && is.numeric(input$weight)) {
-      bmi <- input$weight/(input$height/100)^2
-      updateNumericInput(session, "bmi", value=bmi)
-    }
+    if (exists_and_is_numeric("ht") && exists_and_is_numeric("wt")) {
+        bmi <- input$wt/(input$ht/100)^2
+        updateNumericInput(session, "bmi", value=bmi)
+      }
   }
-
-  observeEvent(input$height, { set_bmi() })
-  observeEvent(input$weight, { set_bmi() })
-
+  observeEvent(input$ht, { set_bmi() })
+  observeEvent(input$wt, { set_bmi() })
+  
+  # autofill leglen if height and sitting height are given
   set_leglen <- function() {
-    if (is.numeric(input$height) && is.numeric(input$sitht)) {
-      leglen <- input$height - input$sitht
-      updateNumericInput(session, "leglen", value=leglen)
+    if (exists_and_is_numeric("ht") && exists_and_is_numeric("sitht")) {
+        leglen <- input$ht - input$sitht
+        updateNumericInput(session, "leglen", value=leglen)
     }
   }
-
-  observeEvent(input$height, { set_leglen() })
+  observeEvent(input$ht, { set_leglen() })
   observeEvent(input$sitht, { set_leglen() })
-
-  output$height_info <- renderText({
-    if (is.numeric(input$height)) {
-      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'ht', input$height, globals$getGrowthReference())
-      .stats2string(lms_stats, "Height")
-    }
-  })
-  
-  output$weight_info <- renderText({
-    if (is.numeric(input$weight)) {
-      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'wt', input$weight, globals$getGrowthReference())
-      .stats2string(lms_stats, "Weight")
-    }
-  })
-  
-  output$bmi_info <- renderText({
-    if (is.numeric(input$bmi)) {
-      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'bmi', input$bmi, globals$getGrowthReference())
-      .stats2string(lms_stats, "BMI")
-    }
-  })
-  
-  output$sitht_info <- renderText({
-    if (is.numeric(input$sitht)) {
-      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'sitht', input$sitht, globals$getGrowthReference())
-      .stats2string(lms_stats, "Sitting height")
-    }
-  })
-  
-  output$leglen_info <- renderText({
-    if (is.numeric(input$leglen)) {
-      lms_stats <- .measurement_to_scores(age_in_years(), input$sex, 'leglen', input$leglen, globals$getGrowthReference())
-      .stats2string(lms_stats, "Leg length")
-    }
-  })
 }

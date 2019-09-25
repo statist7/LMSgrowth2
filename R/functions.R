@@ -70,6 +70,35 @@
   )
 }
 
+#' returns sitar data without loading into current environment
+.get_sitar_data <- function(ref_name) {
+  temp_env <- new.env()
+  nm <- data(list=ref_name, package="sitar", envir=temp_env)
+  temp_env[[nm]]
+}
+
+#' all available measure, sitar code and valid ranges for input boxes
+.get_all_measures <- function() {
+  list(
+    list(description='Height', unit='cm', code='ht', default='', min=20, max=300),
+    list(description='Weight', unit='kg', code='wt', default='', min=0.1, max=300),
+    list(description='BMI', unit='kg/m^2', code='bmi', default='', min=1, max=300),
+    list(description='Sitting height', unit='cm', code='sitht', default='', min=10, max=300),
+    list(description='Leg length', unit='cm', code='leglen', default='', min=10, max=300),
+    list(description='Body fat', unit='xx', code='bfat', default='', min=0.1, max=300)
+  )
+}
+
+#' returns all measures available in the given sitar dataset (looks at all "L.*" columns)
+.get_measures_from_ref <- function(reference) {
+  names(.get_sitar_data(reference)) %>% str_subset(., "^L\\.[a-z]*") %>% str_sub(., 3)
+}
+
+#' returns measures lmsgrowth2 knows how to handle for the given sitar dataset
+.get_measures_for_ref <- function(reference) {
+  .get_all_measures() %>% keep(function(x) x[['code']] %in% .get_measures_from_ref(reference))
+}
+
 #' constructs a string to display sds & other information about a measurement
 .stats2string <- function(lms_stats, title="") {
   # quick and dirty output for now

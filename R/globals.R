@@ -34,6 +34,7 @@ source('R/functions.R', local = TRUE)
   observeEvent(input$growth_ref, {
     js$setcookie(name='growthRef', value=input$growth_ref)
     stash$growthReference <- input$growth_ref
+    stash$growthReferenceMeasures <- .get_measures_for_ref(input$growth_ref)
   })
   
   # setGlobalValue3 <- function(value) {
@@ -41,7 +42,8 @@ source('R/functions.R', local = TRUE)
   # }
   
   out <- list(
-    getGrowthReference = reactive(stash$growthReference)
+    getGrowthReference = reactive(stash$growthReference),
+    getGrowthReferenceMeasures = reactive(stash$growthReferenceMeasures)
     # getGlobalValue3 = reactive(stash$globalValue3),
     # setGlobalValue3 = setGlobalValue3
     )
