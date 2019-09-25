@@ -80,12 +80,17 @@
 #' all available measure, sitar code and valid ranges for input boxes
 .get_all_measures <- function() {
   list(
-    list(description='Height', unit='cm', code='ht', default='', min=20, max=300),
-    list(description='Weight', unit='kg', code='wt', default='', min=0.1, max=300),
-    list(description='BMI', unit='kg/m^2', code='bmi', default='', min=1, max=300),
-    list(description='Sitting height', unit='cm', code='sitht', default='', min=10, max=300),
-    list(description='Leg length', unit='cm', code='leglen', default='', min=10, max=300),
-    list(description='Body fat', unit='xx', code='bfat', default='', min=0.1, max=300)
+    list(description="Height", unit="cm", code="ht", default="", min=20, max=300),
+    list(description="Weight", unit="kg", code="wt", default="", min=0.1, max=300),
+    list(description="BMI", unit="kg/m^2", code="bmi", default="", min=1, max=300),
+    list(description="Head circumference", unit="cm", code="head", default="", min=1, max=300),
+    list(description="Sitting height", unit="cm", code="sitht", default="", min=10, max=300),
+    list(description="Leg length", unit="cm", code="leglen", default="", min=10, max=300),
+    list(description="Waist circumference", unit="cm", code="waist", default="", min=1, max=300),
+    list(description="Body fat", unit="% of weight", code="bfat", default="", min=0.1, max=300),
+    list(description="Arm circumference", unit="cm", code="arm", default="", min=1, max=300),
+    list(description="Subscapular skinfold thickness", unit="mm", code="subscap", default="", min=1, max=300),
+    list(description="Tricep skinfold thickness", unit="mm", code="tricep", default="", min=1, max=300)
   )
 }
 
