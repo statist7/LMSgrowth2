@@ -91,20 +91,21 @@ source("R/functions.R", local = TRUE)
   })
   
   # set up the reactive output for each measurement in the growth reference
-  observe({
-    for (measure in sapply(globals$getGrowthReferenceMeasures(), function(m) { m$code })) {
-      local({
-        input_name <- measure
-        output_name <- paste0(input_name, "_info")
-        output[[output_name]] <- renderText({
-          if (is.numeric(input[[input_name]])) {
-            lms_stats <- .measurement_to_scores(age_in_years(), input$sex, input_name, input[[input_name]], globals$getGrowthReference())
-            .stats2string(lms_stats, output_name)
-          }
-        })
-      })
-    }
-  })
+  observeEvent(globals$getGrowthReferenceMeasures(), 
+               for (measure in sapply(globals$getGrowthReferenceMeasures(), function(m) { m$code })) {
+                 local({
+                   input_name <- measure
+                   output_name <- paste0(input_name, "_info")
+                   output[[output_name]] <- renderText({
+                     if (is.numeric(input[[input_name]])) {
+                       lms_stats <- .measurement_to_scores(age_in_years(), input$sex, input_name, input[[input_name]], globals$getGrowthReference())
+                       .stats2string(lms_stats, output_name)
+                     }
+                   })
+                 })
+               }
+  )
+
 
   # autofill bmi if height and weight are given
   set_bmi <- function() {
