@@ -120,8 +120,7 @@ source("R/functions.R", local = TRUE)
         updateNumericInput(session, "bmi", value=bmi)
       }
   }
-  observeEvent(input$ht, { set_bmi() })
-  observeEvent(input$wt, { set_bmi() })
+  observeEvent(c(input$ht, input$wt), { set_bmi() })
   
   # autofill leglen if height and sitting height are given
   set_leglen <- function() {
@@ -130,6 +129,5 @@ source("R/functions.R", local = TRUE)
         updateNumericInput(session, "leglen", value=leglen)
     }
   }
-  observeEvent(input$ht, { set_leglen() })
-  observeEvent(input$sitht, { set_leglen() })
+  observeEvent(c(input$ht, input$sitht), { set_leglen() })
 }
