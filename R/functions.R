@@ -77,7 +77,7 @@
   temp_env[[nm]]
 }
 
-#' all available measure, sitar code and valid ranges for input boxes
+#' all available measure, sitar code and valid ranges for input boxest
 .get_all_measures <- function() {
   list(
     list(description="Height", unit="cm", code="ht", default="", min=20, max=300),

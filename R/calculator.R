@@ -64,12 +64,12 @@ source("R/functions.R", local = TRUE)
   
   # display the currently selected growth reference
   output$growth_ref <- renderText({
-    globals$getGrowthReference()
+    globals$growthReference
   })
   
   # create an input box for each measurement in the growth reference
   output$measurementInputs <- renderUI({
-    measures <- lapply(globals$getGrowthReferenceMeasures(),
+    measures <- lapply(globals$growthReferenceMeasures,
            function(measure) {
              numericInput(ns(measure$code), 
                           paste0(measure$description, " (", measure$unit, ")"),
@@ -82,7 +82,7 @@ source("R/functions.R", local = TRUE)
   
   # add an output box for each measurement in the growth reference
   output$measurementOutputs <- renderUI({
-    measures <- lapply(globals$getGrowthReferenceMeasures(),
+    measures <- lapply(globals$growthReferenceMeasures,
                              function(measure) {
                                output_name <- paste0(measure$code, "_info")
                                verbatimTextOutput(ns(output_name))
@@ -91,14 +91,14 @@ source("R/functions.R", local = TRUE)
   })
   
   # set up the reactive output for each measurement in the growth reference
-  observeEvent(globals$getGrowthReferenceMeasures(), 
-               for (measure in sapply(globals$getGrowthReferenceMeasures(), function(m) { m$code })) {
+  observeEvent(globals$growthReferenceMeasures, 
+               for (measure in sapply(globals$growthReferenceMeasures, function(m) { m$code })) {
                  local({
                    input_name <- measure
                    output_name <- paste0(input_name, "_info")
                    output[[output_name]] <- renderText({
                      if (is.numeric(input[[input_name]])) {
-                       lms_stats <- .measurement_to_scores(age_in_years(), input$sex, input_name, input[[input_name]], globals$getGrowthReference())
+                       lms_stats <- .measurement_to_scores(age_in_years(), input$sex, input_name, input[[input_name]], globals$growthReference)
                        .stats2string(lms_stats, output_name)
                      }
                    })
