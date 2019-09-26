@@ -71,9 +71,15 @@ source("R/functions.R", local = TRUE)
   output$measurementInputs <- renderUI({
     measures <- lapply(globals$growthReferenceMeasures,
            function(measure) {
+             # keep the current input value for the measure, if it exists
+             current_value <- isolate(input[[measure$code]])
+             if (is.null(current_value)) {
+               current_value <- measure$default
+             }
+             
              numericInput(ns(measure$code), 
                           paste0(measure$description, " (", measure$unit, ")"),
-                          value=measure$default,
+                          value=current_value,
                           min=measure$min,
                           max=measure$max)
            })
