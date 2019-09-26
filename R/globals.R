@@ -19,7 +19,11 @@ source('R/functions.R', local = TRUE)
   status <- reactiveValues(loaded=FALSE)
   
   # object to store global values
-  stash <- reactiveValues()
+  # globalValues$growthReference (string) 
+  #     - the currently selected growth reference e.g. "uk90"
+  # globalValues$growthReferenceMeasures (character vector) 
+  #     - code of measures available in currently selected growth reference
+  globalValues <- reactiveValues()
   
   # this block only executed once on page load to apply saved cookie state, if any
   observe({
@@ -33,20 +37,10 @@ source('R/functions.R', local = TRUE)
   # if user selects growth_ref, then update the cookie
   observeEvent(input$growth_ref, {
     js$setcookie(name='growthRef', value=input$growth_ref)
-    stash$growthReference <- input$growth_ref
-    stash$growthReferenceMeasures <- .get_measures_for_ref(input$growth_ref)
+    globalValues$growthReference <- input$growth_ref
+    globalValues$growthReferenceMeasures <- .get_measures_for_ref(input$growth_ref)
   })
   
-  # setGlobalValue3 <- function(value) {
-  #   stash$globalValue3 <- value
-  # }
-  
-  out <- list(
-    getGrowthReference = reactive(stash$growthReference),
-    getGrowthReferenceMeasures = reactive(stash$growthReferenceMeasures)
-    # getGlobalValue3 = reactive(stash$globalValue3),
-    # setGlobalValue3 = setGlobalValue3
-    )
-  return(out)
+  return(globalValues)
 }
 
