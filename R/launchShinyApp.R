@@ -4,6 +4,7 @@ library(shinyjs)
 source('R/calculator.R', local=TRUE)
 source('R/example.R', local=TRUE)
 source('R/multiple.R', local=TRUE)
+source('R/density.R', local=TRUE)
 source('R/globals.R', local=TRUE)
 
 
@@ -22,6 +23,7 @@ source('R/javascript.R', local=TRUE)
     tabPanel("Calculator", .calculatorUI("calculator")),
     tabPanel("Multiple", .multipleUI("multiple")),
     tabPanel("Example", .exampleUI("example")),
+    tabPanel("Density", .densityUI("density")),
     tabPanel("Preferences", .globalsUI("globals"))
   )
 )
@@ -32,6 +34,7 @@ source('R/javascript.R', local=TRUE)
   callModule(.calculator, "calculator", globals = globals)
   callModule(.multiple, "multiple", globals = globals)
   callModule(.example, "example", globals = globals)
+  callModule(.density, "density", globals = globals)
 }
 
 launchApp <- function() {
