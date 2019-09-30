@@ -82,7 +82,7 @@
   list(
     list(description="Height", unit="cm", code="ht", default="", min=20, max=300),
     list(description="Weight", unit="kg", code="wt", default="", min=0.1, max=300),
-    list(description="BMI", unit="kg/m^2", code="bmi", default="", min=1, max=300),
+    list(description="BMI", unit="kg/m²", code="bmi", default="", min=1, max=300),
     list(description="Head circumference", unit="cm", code="head", default="", min=1, max=300),
     list(description="Sitting height", unit="cm", code="sitht", default="", min=10, max=300),
     list(description="Leg length", unit="cm", code="leglen", default="", min=10, max=300),
