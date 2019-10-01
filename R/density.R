@@ -6,9 +6,11 @@
     sidebarLayout(
       sidebarPanel(
         h3("set L, M and S"),
-        sliderInput(ns('L'), 'L', value = 1, min = -4, max = 6, step = 0.1, ticks = FALSE),
-        numericInput(ns('M'), 'M', value = 1, min = 0, max = 1e6),
-        sliderInput(ns('S'), 'S', value = 0.2, min = 0, max = 1, step = 0.01, ticks = FALSE),
+        sliderInput(ns('L'), 'L', value = 1, min = -4, max = 6, step = 0.1, ticks = TRUE),
+        shinyWidgets::sliderTextInput(ns("M"),"M",
+                                      choices=c(outer(c(1, 2, 5), 10^(-3:2)), 1e3),
+                                      selected=1, grid = TRUE),
+        sliderInput(ns('S'), 'S', value = 0.2, min = 0, max = 1, step = 0.01, ticks = TRUE),
         textInput(ns('centiles'), 'distribution centiles', 
                   paste(gsub('[a-z]', '', sitar::z2cent(-4:4*2/3)), collapse=' '))
       ),
