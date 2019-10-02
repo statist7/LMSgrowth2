@@ -18,6 +18,11 @@ Source: CRAN
 Version: 2.4.0
 Hash: 948a547c484e5bea15eee76cc53cce3f
 
+Package: RColorBrewer
+Source: CRAN
+Version: 1.1-2
+Hash: c0d56cd15034f395874c870141870c25
+
 Package: Rcpp
 Source: CRAN
 Version: 1.0.1
@@ -38,6 +43,11 @@ Source: CRAN
 Version: 1.1.0
 Hash: bc4e54014c2049f2605ad0c3ba0cce6b
 Requires: assertthat, crayon
+
+Package: colorspace
+Source: CRAN
+Version: 1.4-1
+Hash: 60a56e9998b8b58ee378db3dc91b27a5
 
 Package: crayon
 Source: CRAN
@@ -88,6 +98,11 @@ Source: CRAN
 Version: 1.6
 Hash: 5f969e213e966135393e3e304abf3f49
 
+Package: labeling
+Source: CRAN
+Version: 0.3
+Hash: ecf589b42cd284b03a4beb9665482d3e
+
 Package: later
 Source: CRAN
 Version: 0.8.0
@@ -103,6 +118,12 @@ Package: mime
 Source: CRAN
 Version: 0.6
 Hash: 2ed8f98b8284ad733f3907fc6e2f1334
+
+Package: munsell
+Source: CRAN
+Version: 0.5.0
+Hash: 38d0efee9bb99bef143bde41c4ce715c
+Requires: colorspace
 
 Package: packrat
 Source: CRAN
@@ -159,12 +180,24 @@ Version: 0.0.4
 Hash: 86edf499d5726bc815e30103f8f62dac
 Requires: dplyr, generics, purrr, rlang, tibble, tidyr
 
+Package: scales
+Source: CRAN
+Version: 1.0.0
+Hash: f1b117e6daa2bdfa11cc671133d8bdd4
+Requires: R6, RColorBrewer, Rcpp, labeling, munsell, viridisLite
+
 Package: shiny
 Source: CRAN
 Version: 1.3.2
 Hash: a48cf01573400333efa51dc999ab6447
 Requires: R6, crayon, digest, htmltools, httpuv, jsonlite, later, mime,
     promises, rlang, sourcetools, xtable
+
+Package: shinyWidgets
+Source: CRAN
+Version: 0.4.9
+Hash: b317a5a7da642e6962a6382eab79d803
+Requires: htmltools, jsonlite, scales, shiny
 
 Package: shinyjs
 Source: CRAN
@@ -223,6 +256,11 @@ Package: utf8
 Source: CRAN
 Version: 1.1.4
 Hash: f3f97ce59092abc8ed3fd098a59e236c
+
+Package: viridisLite
+Source: CRAN
+Version: 0.3.0
+Hash: 78bb072c4f9e729a283d4c40ec93f9c6
 
 Package: withr
 Source: CRAN
