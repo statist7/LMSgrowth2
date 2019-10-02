@@ -171,7 +171,7 @@
         sex_column_or_value <- get_sex()
         age_column_or_value <- get_age()
 
-        lms_stats <- .measurement_to_scores(age_column_or_value, sex_column_or_value, code_name, df[, column], ref=globals$getGrowthReference())
+        lms_stats <- .measurement_to_scores(age_column_or_value, sex_column_or_value, code_name, df[, column], ref=globals$growthReference)
 
         # loop through each of the possible statistics and calculate if necessary
         for (calc in calculations) {

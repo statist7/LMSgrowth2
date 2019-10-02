@@ -1,5 +1,7 @@
 library(shiny)
 library(shinyjs)
+library(purrr)
+library(stringr)
 
 source('R/calculator.R', local=TRUE)
 source('R/example.R', local=TRUE)
