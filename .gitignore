@@ -38,3 +38,6 @@ rsconnect/
 # packrat R package management
 packrat/lib*/
 packrat/src/
+
+# Temporary file generated on macOS
+.DS_Store
