@@ -4,23 +4,56 @@
   value
 }
 
+#' Convert a time duration from the given unit to years
+.duration_from_unit_to_years <- function(value, unit) {
+  if (unit == "years") {
+    value
+  } else if (unit == "months") {
+    value / 12
+  } else if (unit == "weeks") {
+    value * 7 / 365.25
+  } else if (unit == "days") {
+    value / 365.25
+  }
+}
+
+#' Convert a time duration from years to the given unit
+.duration_from_years_to_unit <- function(value, unit) {
+  if (unit == "years") {
+    value
+  } else if (unit == "months") {
+    value * 12
+  } else if (unit == "weeks") {
+    value * 365.25 / 7
+  } else if (unit == "days") {
+    value * 365.25
+  }
+}
+
 #' calculates the duration in days of the arguments
 .duration_in_years <- function(years=c(0), months=c(0), weeks=c(0), days=c(0)) {
   years <- .get_numeric(years, 0)
   months <- .get_numeric(months, 0)
   weeks <- .get_numeric(weeks, 0)
   days <- .get_numeric(days, 0)
-  (years) + (months / 12) + (weeks * 7 / 365.25) + (days / 365.25)
+  .duration_from_unit_to_years(years, "years") +
+    .duration_from_unit_to_years(months, "months") +
+    .duration_from_unit_to_years(weeks, "weeks") +
+    .duration_from_unit_to_years(days, "days")
 }
 
 #' calculates the duration in days of the arguments
 .duration_in_days <- function(years, months, weeks, days) {
-  .duration_in_years(years, months, weeks, days) * 365.25
+  .duration_from_years_to_unit(.duration_in_years(years, months, weeks, days),
+                               "days")
 }
 
 #' calculates the difference between to dates in years
 .date_diff <- function(date1, date2) {
-  as.numeric(difftime(as.Date(date1), as.Date(date2), unit="days")) / 365.25  
+  .duration_from_unit_to_years(as.numeric(difftime(as.Date(date1),
+                                                   as.Date(date2),
+                                                   unit="days")),
+                               "days")
 }
 
 #' returns the SDS and L M & S values for a given measurement 
@@ -95,13 +128,23 @@
 }
 
 #' returns all measures available in the given sitar dataset (looks at all "L.*" columns)
-.get_measures_from_ref <- function(reference) {
-  names(.get_sitar_data(reference)) %>% str_subset(., "^L\\.[a-z]*") %>% str_sub(., 3)
+.get_measures_from_data <- function(sitar_data) {
+  names(sitar_data) %>% str_subset(., "^L\\.[a-z]*") %>% str_sub(., 3)
 }
 
 #' returns measures lmsgrowth2 knows how to handle for the given sitar dataset
-.get_measures_for_ref <- function(reference) {
-  .get_all_measures() %>% keep(function(x) x[['code']] %in% .get_measures_from_ref(reference))
+.get_measures_for_data <- function(sitar_data) {
+  .get_all_measures() %>% keep(function(x) x[['code']] %in% .get_measures_from_data(sitar_data))
+}
+
+#' returns the sorted list of ages available in the given sitar dataset
+.get_ages_for_data <- function(sitar_data) {
+  sort(sitar_data$years)
+}
+
+#' returns the list of sexes available in the given sitar dataset
+.get_sexes_for_data <- function(sitar_data) {
+  levels(sitar_data$sex)
 }
 
 #' constructs a string to display sds & other information about a measurement

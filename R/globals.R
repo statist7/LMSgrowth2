@@ -8,7 +8,7 @@ source('R/functions.R', local = TRUE)
 
 .globalsUI <- function(id, label="globals ui") {
   ns <- NS(id)
-  
+
   fluidPage(
     selectInput(ns("growth_ref"), label = "Growth reference", choices = .get_references())
   )
@@ -17,14 +17,20 @@ source('R/functions.R', local = TRUE)
 .globals <- function(input, output, session) {
   # store the page load status
   status <- reactiveValues(loaded=FALSE)
-  
+
   # object to store global values
-  # globalValues$growthReference (string) 
+  # globalValues$growthReference (string)
   #     - the currently selected growth reference e.g. "uk90"
-  # globalValues$growthReferenceMeasures (character vector) 
+  # globalValues$growthReferenceMeasures (character vector)
   #     - code of measures available in currently selected growth reference
+  # growthReferenceAgeStart (numeric)
+  #     - the first age available in currently selected growth reference
+  # growthReferenceAgeStop (numeric)
+  #     - the last age available in currently selected growth reference
+  # growthReferenceSexes (string)
+  #     - the list of sexes available in currently selected growth reference
   globalValues <- reactiveValues()
-  
+
   # this block only executed once on page load to apply saved cookie state, if any
   observe({
     if (!status$loaded & !is.null(input$jscookie[["growthRef"]])) {
@@ -38,9 +44,13 @@ source('R/functions.R', local = TRUE)
   observeEvent(input$growth_ref, {
     js$setcookie(name='growthRef', value=input$growth_ref)
     globalValues$growthReference <- input$growth_ref
-    globalValues$growthReferenceMeasures <- .get_measures_for_ref(input$growth_ref)
+    sitar_data <- .get_sitar_data(input$growth_ref)
+    globalValues$growthReferenceMeasures <- .get_measures_for_data(sitar_data)
+    ages <- .get_ages_for_data(sitar_data)
+    globalValues$growthReferenceAgeStart <- ages[1]
+    globalValues$growthReferenceAgeStop <- ages[length(ages)]
+    globalValues$growthReferenceSexes <- .get_sexes_for_data(sitar_data)
   })
-  
+
   return(globalValues)
 }
-

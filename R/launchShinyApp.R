@@ -6,6 +6,7 @@ library(stringr)
 source('R/calculator.R', local=TRUE)
 source('R/example.R', local=TRUE)
 source('R/multiple.R', local=TRUE)
+source('R/centile.R', local=TRUE)
 source('R/density.R', local=TRUE)
 source('R/globals.R', local=TRUE)
 
@@ -24,6 +25,7 @@ source('R/javascript.R', local=TRUE)
     "LMSgrowth2",
     tabPanel("Calculator", .calculatorUI("calculator")),
     tabPanel("Multiple", .multipleUI("multiple")),
+    tabPanel("Centile", .centileUI("centile")),
     tabPanel("Example", .exampleUI("example")),
     tabPanel("Density", .densityUI("density")),
     tabPanel("Preferences", .globalsUI("globals"))
@@ -35,6 +37,7 @@ source('R/javascript.R', local=TRUE)
   globals <- callModule(.globals, "globals")
   callModule(.calculator, "calculator", globals = globals)
   callModule(.multiple, "multiple", globals = globals)
+  callModule(.centile, "centile", globals = globals)
   callModule(.example, "example", globals = globals)
   callModule(.density, "density", globals = globals)
 }
