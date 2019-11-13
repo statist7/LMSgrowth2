@@ -168,7 +168,7 @@ Package: pkgbuild
 Source: CRAN
 Version: 1.0.6
 Hash: f41de345bf0dda984cce64a7ea668ea4
-Requires: R6, crayon, withr, cli, callr, desc, prettyunits, rprojroot
+Requires: R6, crayon, withr, rprojroot, cli, prettyunits, desc, callr
 
 Package: pkgconfig
 Source: CRAN
@@ -179,7 +179,7 @@ Package: pkgload
 Source: CRAN
 Version: 1.0.2
 Hash: 41eb2db35be61f6f9e8864cf87a1ecb0
-Requires: rlang, withr, desc, pkgbuild, rprojroot, rstudioapi
+Requires: rlang, rstudioapi, withr, rprojroot, desc, pkgbuild
 
 Package: plogr
 Source: CRAN
@@ -228,8 +228,8 @@ Requires: MatrixModels, SparseM
 
 Package: rlang
 Source: CRAN
-Version: 0.3.4
-Hash: 6a5220d1a973463418286038095d8c0b
+Version: 0.4.1
+Hash: 686b7c4593f009713b9df03a2bb33124
 
 Package: rprojroot
 Source: CRAN
@@ -299,8 +299,8 @@ Package: testthat
 Source: CRAN
 Version: 2.0.1
 Hash: 777eb6e94f5a62bf6320fecf0175bbbb
-Requires: R6, crayon, digest, magrittr, praise, rlang, withr, cli,
-    ellipsis, evaluate, pkgload
+Requires: R6, crayon, digest, evaluate, magrittr, praise, rlang, withr,
+    cli, ellipsis, pkgload
 
 Package: tibble
 Source: CRAN
