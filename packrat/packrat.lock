@@ -1,7 +1,7 @@
 PackratFormat: 1.4
 PackratVersion: 0.5.0
-RVersion: 3.5.3
-Repos: CRAN=https://cran.rstudio.com/
+RVersion: 3.6.0
+Repos: CRAN=https://cran.ma.imperial.ac.uk
 
 Package: BH
 Source: CRAN
@@ -38,6 +38,17 @@ Source: CRAN
 Version: 0.2.1
 Hash: 622be49032fe50bd42e96aaef613e209
 
+Package: backports
+Source: CRAN
+Version: 1.1.5
+Hash: 35ad64fcf2063e2a52031b0f1a59d8f0
+
+Package: callr
+Source: CRAN
+Version: 3.3.2
+Hash: 7661e5194cbbe511957b2fb621516c1b
+Requires: R6, processx
+
 Package: cli
 Source: CRAN
 Version: 1.1.0
@@ -54,6 +65,12 @@ Source: CRAN
 Version: 1.3.4
 Hash: ff2840dd9b0d563fc80377a5a45510cd
 
+Package: desc
+Source: CRAN
+Version: 1.2.0
+Hash: a0a3ca939997679a52816bae4ed6aaae
+Requires: R6, assertthat, crayon, rprojroot
+
 Package: digest
 Source: CRAN
 Version: 0.6.18
@@ -65,6 +82,17 @@ Version: 0.8.0.1
 Hash: 61622995e32970a772e895bec2b4a305
 Requires: BH, R6, Rcpp, assertthat, glue, magrittr, pkgconfig, plogr,
     rlang, tibble, tidyselect
+
+Package: ellipsis
+Source: CRAN
+Version: 0.3.0
+Hash: 30b58109e4d7c6184a9c2e32f9ae38c6
+Requires: rlang
+
+Package: evaluate
+Source: CRAN
+Version: 0.14
+Hash: 18306cc3bc1aec7b7360eea8a0eb0ee1
 
 Package: fansi
 Source: CRAN
@@ -136,10 +164,22 @@ Version: 1.3.1
 Hash: 9ed4c2a5d3047bfba3e852ad5e806d91
 Requires: cli, crayon, fansi, rlang, utf8
 
+Package: pkgbuild
+Source: CRAN
+Version: 1.0.6
+Hash: f41de345bf0dda984cce64a7ea668ea4
+Requires: R6, crayon, withr, cli, callr, desc, prettyunits, rprojroot
+
 Package: pkgconfig
 Source: CRAN
 Version: 2.0.2
 Hash: b0fd6ed908e150b77e5f00c6478bd58c
+
+Package: pkgload
+Source: CRAN
+Version: 1.0.2
+Hash: 41eb2db35be61f6f9e8864cf87a1ecb0
+Requires: rlang, withr, desc, pkgbuild, rprojroot, rstudioapi
 
 Package: plogr
 Source: CRAN
@@ -151,11 +191,28 @@ Source: CRAN
 Version: 1.0.0
 Hash: 77da8f1df873a4b91e5c4a68fe2fb1b6
 
+Package: prettyunits
+Source: CRAN
+Version: 1.0.2
+Hash: 49286102a855640daaa38eafe8b1ec30
+Requires: assertthat, magrittr
+
+Package: processx
+Source: CRAN
+Version: 3.4.1
+Hash: 5c1f432b290b26ccc2aaaa8ff1fd2f62
+Requires: R6, ps
+
 Package: promises
 Source: CRAN
 Version: 1.0.1
 Hash: 3a177f5946e3b85c4f65f3ca3e500cd0
 Requires: R6, Rcpp, later, magrittr, rlang
+
+Package: ps
+Source: CRAN
+Version: 1.3.0
+Hash: 1d4cae95887ffe5b1a22bea5994476cd
 
 Package: purrr
 Source: CRAN
@@ -174,11 +231,22 @@ Source: CRAN
 Version: 0.3.4
 Hash: 6a5220d1a973463418286038095d8c0b
 
+Package: rprojroot
+Source: CRAN
+Version: 1.3-2
+Hash: a25c3f70c166fb3fbabc410eb32b6366
+Requires: backports
+
 Package: rsample
 Source: CRAN
 Version: 0.0.4
 Hash: 86edf499d5726bc815e30103f8f62dac
 Requires: dplyr, generics, purrr, rlang, tibble, tidyr
+
+Package: rstudioapi
+Source: CRAN
+Version: 0.10
+Hash: 63f43c6ff14d92e1d65ca6c21d45a1eb
 
 Package: scales
 Source: CRAN
@@ -231,7 +299,8 @@ Package: testthat
 Source: CRAN
 Version: 2.0.1
 Hash: 777eb6e94f5a62bf6320fecf0175bbbb
-Requires: R6, crayon, digest, magrittr, praise, rlang, withr, cli
+Requires: R6, crayon, digest, magrittr, praise, rlang, withr, cli,
+    ellipsis, evaluate, pkgload
 
 Package: tibble
 Source: CRAN
