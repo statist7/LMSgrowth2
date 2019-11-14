@@ -31,10 +31,9 @@ source("R/functions.R", local = TRUE)
       
       # Show a plot of the generated distribution
       mainPanel(
-        p("Selected growth reference:"),
-        textOutput(ns("growth_ref")),
-        verbatimTextOutput(ns("age_info")),
-        uiOutput(ns("measurementOutputs"))
+        h3(textOutput(ns("growth_ref"))),      
+        h4(textOutput(ns("age_info"))),
+        formattableOutput(ns("measurementTable"))
       )
     )
   )
@@ -44,31 +43,48 @@ source("R/functions.R", local = TRUE)
 .calculator <- function(input, output, session, globals) {
   ns <- session$ns
   
+  test.table <- data.frame(lapply(1:8, function(x) {1:10}))
+  output$measurementTable <- renderFormattable({formattable(test.table, list())})
+  
   exists_and_is_numeric <- function(name) {
     return(name %in% names(input) && is.numeric(input[[name]]))
   }
   
   age_in_years <- reactive({
     if (input$age_input == "age") {
-      .duration_in_years(input$age_years, input$age_months, input$age_weeks, input$age_days)
+      y <- .duration_in_years(input$age_years, input$age_months, input$age_weeks, input$age_days)
     } else {
-      .date_diff(input$date_of_measurement, input$date_of_birth)
+      y <- .date_diff(input$date_of_measurement, input$date_of_birth)
     }
+    round(y, 2)
   })
   
   output$age_info <- renderText({
     if (is.numeric(age_in_years()) && age_in_years() > 0) {
-      paste("Age:", age_in_years(), "years")  
+      if (input$sex == 1) {
+        sex_str <- "Male"
+      } else {
+        sex_str <- "Female"
+      }
+      paste(sex_str, ", ", age_in_years(), " years", sep="")  
     }
   })
   
   # display the currently selected growth reference
   output$growth_ref <- renderText({
-    globals$growthReference
+    references <- .get_references()
+    reference_name <- names(references)[references == globals$growthReference]
+    return(reference_name)
   })
+  
+  measurementCalculated <- reactiveValues()
   
   # create an input box for each measurement in the growth reference
   output$measurementInputs <- renderUI({
+    # keep an ordered list of measurements
+    measure_codes <- globals$growthReferenceMeasures %>% map_chr(function(x) { x[['code']] })
+    measurementCalculated[['.codes']] = measure_codes
+    
     measures <- lapply(globals$growthReferenceMeasures,
            function(measure) {
              # keep the current input value for the measure, if it exists
@@ -77,40 +93,86 @@ source("R/functions.R", local = TRUE)
                current_value <- measure$default
              }
              
+             measurementCalculated[[measure$code]] <- list(sds=NA, centile=2, pred=3, pred_perc=4, cv_perc=5, skewness=6, code=measure$code)
+             
              numericInput(ns(measure$code), 
                           paste0(measure$description, " (", measure$unit, ")"),
                           value=current_value,
                           min=measure$min,
                           max=measure$max)
+             
            })
     do.call(tagList, measures)
   })
   
-  # add an output box for each measurement in the growth reference
-  output$measurementOutputs <- renderUI({
-    measures <- lapply(globals$growthReferenceMeasures,
-                             function(measure) {
-                               output_name <- paste0(measure$code, "_info")
-                               verbatimTextOutput(ns(output_name))
-                             })
-    do.call(tagList, measures)
+  output$measurementTable <- renderFormattable({
+    # get the available measurements (depends on selected growth reference) and put them in a dataframe
+    availableMeasurements <- reactiveValuesToList(measurementCalculated, all.names=FALSE)
+    df <- data.frame(matrix(unlist(availableMeasurements), nrow=length(availableMeasurements), byrow=T), stringsAsFactors = FALSE)
+    
+    # prevents stale measurements being includes (e.g. when you switch reference)
+    colnames(df) <- c('SDS', 'Centile', 'Predicted', '% Predicted', '% CV', 'Skewness', 'code')
+    df <- df[df$code %in% measurementCalculated$.codes,]
+    
+    # all the columns are double except 'code' column (keep as string)
+    df <- df %>% tbl_df %>% mutate_at(grep("code|Centile", colnames(.), invert=T), funs(as.numeric)) %>% as.data.frame()
+    
+    # order the columns by the order they appear in the growth references (and so the input boxes)
+    df <- df[order(match(df$code, measurementCalculated$.codes)), ]
+    
+    # use the descriptive name of measurement
+    df$description <- sapply(measurementCalculated$.codes, 
+                             function(x1) { detect(globals$growthReferenceMeasures, function(x2) { x2[['code']] == x1})$description })
+    
+    # remove all measurements that don't have calculations
+    df <- df[!(is.na(df$SDS)), ]
+    
+    if (nrow(df) == 0) {
+      return(NULL)
+    }
+    
+    # round all numeric columns to 2 decimal places
+    df <- df %>% tbl_df %>% mutate_if(is.numeric, round, 2) %>% as.data.frame()
+    row.names(df) <- df$description
+    df$code <- NULL
+    df$description <- NULL
+    formattable(df, list())
   })
   
-  # set up the reactive output for each measurement in the growth reference
+  # watch for changes in the measure available in selected growth reference
   observeEvent(
     globals$growthReferenceMeasures, {
+      # for each measure code in the current growth measure
       for (measure in sapply(globals$growthReferenceMeasures, function(m) { m$code })) {
+        # we need local() because we're going to create new observeEvent() for each measure
         local({
           input_name <- measure
           output_name <- paste0(input_name, "_info")
           
-          output[[output_name]] <- renderText({
-            if (is.numeric(input[[input_name]])) {
-              lms_stats <- .measurement_to_scores(age_in_years(), input$sex, input_name, input[[input_name]], globals$growthReference)
-              .stats2string(lms_stats, output_name)
-            }
-          })
-        })
+          # when the measure input box changes
+          observeEvent(
+            input[[input_name]], { 
+              # if the input is numerical value TODO: change to req()
+              if (is.numeric(input[[input_name]])) {
+                # a helper function to update calculated measurements
+                update_mc <- function(name, value) {
+                  measurementCalculated[[input_name]][[name]] <- value
+                }
+                
+                # get and set the lms statistics for this measure
+                lms_stats <- .measurement_to_scores(age_in_years(), input$sex, input_name, input[[input_name]], globals$growthReference)
+                update_mc('sds', .get_sds(lms_stats))
+                update_mc('centile', .get_centile(lms_stats))
+                update_mc('pred', .get_predicted(lms_stats))
+                update_mc('pred_perc', .get_perc_predicted(lms_stats))
+                update_mc('cv_perc', .get_perc_cv(lms_stats))
+                update_mc('skewness', .get_skewness(lms_stats))
+              } else {
+                # this measurement has not been set (SDS value is NA, the rest don't matter)
+                measurementCalculated[[input_name]]$sds <- NA
+              }
+          }) # end observeEvent()
+        }) # end local()
       }
     }
   )
@@ -120,6 +182,7 @@ source("R/functions.R", local = TRUE)
   set_bmi <- function() {
     if (exists_and_is_numeric("ht") && exists_and_is_numeric("wt")) {
         bmi <- input$wt/(input$ht/100)^2
+        bmi <- round(bmi, 2)
         updateNumericInput(session, "bmi", value=bmi)
       }
   }
@@ -129,6 +192,7 @@ source("R/functions.R", local = TRUE)
   set_leglen <- function() {
     if (exists_and_is_numeric("ht") && exists_and_is_numeric("sitht")) {
         leglen <- input$ht - input$sitht
+        leglen <- round(leglen, 2)
         updateNumericInput(session, "leglen", value=leglen)
     }
   }

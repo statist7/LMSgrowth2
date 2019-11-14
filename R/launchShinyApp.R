@@ -4,6 +4,7 @@ library(purrr)
 library(stringr)
 library(plotly)
 library(DT)
+library(formattable)
 
 source('R/calculator.R', local=TRUE)
 source('R/example.R', local=TRUE)
