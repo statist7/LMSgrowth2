@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/UCL/LMSgrowth2.svg?token=VzQyGkGCwi2xenWmKVcK&branch=master)](https://travis-ci.com/UCL/LMSgrowth2)
+
 # LMSgrowth2
 
 ## Prerequisites

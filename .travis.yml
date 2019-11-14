@@ -1,0 +1,21 @@
+language: R
+sudo: false
+
+os:
+  - linux
+  - osx
+
+cache:
+  directories:
+    - $HOME/R/Library
+    - $TRAVIS_BUILD_DIR/packrat/src
+    - $TRAVIS_BUILD_DIR/packrat/lib
+  packages: true
+
+install:
+  - R -e "install.packages(c('devtools', 'usethis', 'testthat'))"
+  - R -e "0" --args --bootstrap-packrat
+  - R -e "packrat::restore(restart = FALSE)"
+
+script:
+  - R -e "devtools::test()"
