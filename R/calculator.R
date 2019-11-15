@@ -43,13 +43,6 @@ source("R/functions.R", local = TRUE)
 .calculator <- function(input, output, session, globals) {
   ns <- session$ns
   
-  test.table <- data.frame(lapply(1:8, function(x) {1:10}))
-  output$measurementTable <- renderFormattable({formattable(test.table, list())})
-  
-  exists_and_is_numeric <- function(name) {
-    return(name %in% names(input) && is.numeric(input[[name]]))
-  }
-  
   age_in_years <- reactive({
     if (input$age_input == "age") {
       y <- .duration_in_years(input$age_years, input$age_months, input$age_weeks, input$age_days)
@@ -176,7 +169,10 @@ source("R/functions.R", local = TRUE)
       }
     }
   )
-
+  
+  exists_and_is_numeric <- function(name) {
+    return(name %in% names(input) && is.numeric(input[[name]]))
+  }
 
   # autofill bmi if height and weight are given
   set_bmi <- function() {
