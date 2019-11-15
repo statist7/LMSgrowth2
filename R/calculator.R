@@ -11,14 +11,15 @@ source("R/functions.R", local = TRUE)
         h3("Measurement to SDS"),
         radioButtons(ns("sex"), label = h4("Sex"),
                      choices = list("Male" = 1, "Female" = 2), 
-                     selected = 1),
+                     selected = 1,
+                     inline = T),
         radioButtons(ns("age_input"), choices = list("Age" = "age", "Dates" = "dates"), selected = "age", label = h4("Age"), inline=TRUE),
         conditionalPanel(
           condition = "input['calculator-age_input'] == 'age'",
-          numericInput(ns("age_years"), "years", value="", min=0),
-          numericInput(ns("age_months"), "months", value="", min=0),
-          numericInput(ns("age_weeks"), "weeks", value="", min=0),
-          numericInput(ns("age_days"), "days", value="", min=0)
+          fluidRow(
+            column(6,  numericInput(ns("age_years"), "Years", value="", min=0), numericInput(ns("age_weeks"), "Weeks", value="", min=0)),
+            column(6,  numericInput(ns("age_months"), "Months", value="", min=0), numericInput(ns("age_days"), "Days", value="", min=0))
+          )
         ),
         conditionalPanel(
           condition = "input['calculator-age_input'] == 'dates'",
@@ -76,21 +77,22 @@ source("R/functions.R", local = TRUE)
   output$measurementInputs <- renderUI({
     # keep an ordered list of measurements
     measure_codes <- globals$growthReferenceMeasures %>% map_chr(function(x) { x[['code']] })
-    measurementCalculated[['.codes']] = measure_codes
+    measurementCalculated[['.codes']] <- measure_codes
     
     measures <- lapply(globals$growthReferenceMeasures,
            function(measure) {
-             # keep the current input value for the measure, if it exists
-             current_value <- isolate(input[[measure$code]])
-             if (is.null(current_value)) {
-               current_value <- measure$default
-             }
-             
              measurementCalculated[[measure$code]] <- list(sds=NA, centile=2, pred=3, pred_perc=4, cv_perc=5, skewness=6, code=measure$code)
+             
+             # TODO: this is not working, output is not refreshed when reference changed
+             # keep the current input value for the measure, if it exists
+             # current_value <- isolate(input[[measure$code]])
+             # if (is.null(current_value)) {
+             #   current_value <- measure$default
+             # }
              
              numericInput(ns(measure$code), 
                           paste0(measure$description, " (", measure$unit, ")"),
-                          value=current_value,
+                          value=measure$default,
                           min=measure$min,
                           max=measure$max)
              
@@ -99,6 +101,8 @@ source("R/functions.R", local = TRUE)
   })
   
   output$measurementTable <- renderFormattable({
+    measurementCalculated
+    
     # get the available measurements (depends on selected growth reference) and put them in a dataframe
     availableMeasurements <- reactiveValuesToList(measurementCalculated, all.names=FALSE)
     df <- data.frame(matrix(unlist(availableMeasurements), nrow=length(availableMeasurements), byrow=T), stringsAsFactors = FALSE)
@@ -144,7 +148,7 @@ source("R/functions.R", local = TRUE)
           
           # when the measure input box changes
           observeEvent(
-            input[[input_name]], { 
+            c(input[[input_name]], age_in_years()), { 
               # if the input is numerical value TODO: change to req()
               if (is.numeric(input[[input_name]])) {
                 # a helper function to update calculated measurements

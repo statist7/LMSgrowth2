@@ -1,3 +1,4 @@
+library(dplyr)
 library(shiny)
 library(shinyjs)
 library(purrr)
@@ -12,8 +13,6 @@ source('R/multiple.R', local=TRUE)
 source('R/centile.R', local=TRUE)
 source('R/density.R', local=TRUE)
 source('R/globals.R', local=TRUE)
-
-
 
 # Load Javascript functions because can't get 
 # the extendShinyjs(script='...') working in a package
