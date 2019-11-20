@@ -6,8 +6,8 @@
     sidebarLayout(
       sidebarPanel(
         h3("Calculate centiles"),
-        radioButtons(ns("measure"), label = h4("Measurement"),
-                     choices = list(), selected = ""),
+        selectInput(ns("measure"), label = h4("Measurement"),
+                    choices = list(), selected = ""),
         checkboxGroupInput(ns("sex"), label = h4("Sex"),
                            choices = c("Female" = "f", "Male" = "m"),
                            selected = c("f", "m"), inline = TRUE),
@@ -280,9 +280,9 @@
     measurements <- sapply(globals$growthReferenceMeasures,
                            function(m) {paste0(m$description, " (", m$unit,")")})
     codes <- sapply(globals$growthReferenceMeasures, function(m) {m$code})
-    updateRadioButtons(session, "measure",
-                       choices = as.list(setNames(codes, measurements)),
-                       selected = codes[1])
+    updateSelectInput(session, "measure",
+                      choices = as.list(setNames(codes, measurements)),
+                      selected = codes[1])
   }
   # When the measurements in reference data change, update the title and the
   # list of measurements
