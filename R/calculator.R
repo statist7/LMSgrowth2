@@ -30,7 +30,8 @@ source("R/functions.R", local = TRUE)
       mainPanel(
         h3(textOutput(ns("growth_ref"))),      
         h4(textOutput(ns("age_info"))),
-        formattableOutput(ns("measurementTable"))
+        formattableOutput(ns("measurementTable")),
+        plotlyOutput(ns("measurementPlot"))
       )
     )
   )
@@ -99,7 +100,11 @@ source("R/functions.R", local = TRUE)
     do.call(tagList, measures)
   })
   
-  output$measurementTable <- renderFormattable({
+  calculatedStats <- reactiveVal(value = NULL)
+  
+  observe({
+    age_in_years()
+    
     # get the available measurements (depends on selected growth reference) and put them in a dataframe
     availableMeasurements <- reactiveValuesToList(measurementCalculated, all.names=FALSE)
     df <- data.frame(matrix(unlist(availableMeasurements), nrow=length(availableMeasurements), byrow=T), stringsAsFactors = FALSE)
@@ -122,7 +127,7 @@ source("R/functions.R", local = TRUE)
     df <- df[!(is.na(df$SDS)), ]
     
     if (nrow(df) == 0) {
-      return(NULL)
+      calculatedStats(NULL)
     }
     
     # round all numeric columns to 2 decimal places
@@ -130,7 +135,16 @@ source("R/functions.R", local = TRUE)
     row.names(df) <- df$description
     df$code <- NULL
     df$description <- NULL
-    formattable(df, list())
+    
+    calculatedStats(df)
+  })
+  
+  output$measurementTable <- renderFormattable({
+    if (nrow(calculatedStats()) > 0) {
+      formattable(calculatedStats(), list())
+    } else {
+      formattable(data.frame(), list())
+    }
   })
   
   # watch for changes in the measure available in selected growth reference
@@ -194,4 +208,20 @@ source("R/functions.R", local = TRUE)
     }
   }
   observeEvent(c(input$ht, input$sitht), { set_leglen() })
+  
+  output$measurementPlot <- renderPlotly({
+    default_centiles <- c(0.4, 2, 9, 25, 50, 75, 91, 98, 99.6)
+    default_z <- qnorm(default_centiles/100)
+    
+    measurement_names <- c("one", "two", "three")
+    measurement_z <- c(0.3, -1, 1.66)
+    
+    measurement_names <- factor(measurement_names, levels=measurement_names)
+    
+    plot_ly(x = ~measurement_names, y = ~measurement_z, type="scatter") %>% 
+      layout(yaxis = list(autorange = FALSE, 
+                          range = c(default_z[1], default_z[length(default_z)]),
+                          title = list(text="z-score")),
+             xaxis = list(title = list(text="measurement")))
+  })
 }
