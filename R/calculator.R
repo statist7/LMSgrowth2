@@ -23,7 +23,9 @@ source("R/functions.R", local = TRUE)
           dateInput(ns("date_of_measurement"), "Measurement")
         ),
         h4("Measurements"),
-        uiOutput(ns("measurementInputs"))
+        uiOutput(ns("measurementInputs")),
+        h4("Plot options"),
+        radioButtons(ns("plotYAxis"), label = h4("Y axis"), choices = list("Centile", "z-score"), selected = "Centile", inline = T)
       ),
       
       # Show a plot of the generated distribution
@@ -50,6 +52,8 @@ source("R/functions.R", local = TRUE)
       y <- .date_diff(input$date_of_measurement, input$date_of_birth)
     }
     round(y, 2)
+    
+    # TODO: set max based on growth reference
   })
   
   output$age_info <- renderText({
@@ -210,18 +214,38 @@ source("R/functions.R", local = TRUE)
   observeEvent(c(input$ht, input$sitht), { set_leglen() })
   
   output$measurementPlot <- renderPlotly({
-    default_centiles <- c(0.4, 2, 9, 25, 50, 75, 91, 98, 99.6)
-    default_z <- qnorm(default_centiles/100)
+    age_in_years()
+    if (nrow(calculatedStats()) == 0) {
+      return(NULL)
+    }
     
-    measurement_names <- c("one", "two", "three")
-    measurement_z <- c(0.3, -1, 1.66)
+    default_centiles <- c(2, 9, 25, 50, 75, 91, 98)  # could add 0.4, 99.6?
+    default_z <- c(-3, -2, -1, 0, 1, 2, 3)
     
+    df <- calculatedStats()
+    
+    measurement_names <- rownames(df)
     measurement_names <- factor(measurement_names, levels=measurement_names)
     
-    plot_ly(x = ~measurement_names, y = ~measurement_z, type="scatter") %>% 
+    if (input$plotYAxis == "z-score") {
+      measurement_y <- df$SDS
+      range <- c(default_z[1], default_z[length(default_z)])
+      tickvals <- default_z
+    } else {
+      measurement_y <- as.numeric(gsub("([0-9]+).*$", "\\1", df$Centile))
+      range <- c(default_centiles[1], default_centiles[length(default_centiles)])
+      tickvals <- default_centiles
+    }
+    
+    label <- input$plotYAxis
+    
+    plot_ly(x = ~measurement_names, y = ~measurement_y, type="scatter", mode="markers") %>% 
       layout(yaxis = list(autorange = FALSE, 
-                          range = c(default_z[1], default_z[length(default_z)]),
-                          title = list(text="z-score")),
-             xaxis = list(title = list(text="measurement")))
+                          range = range,
+                          tickvals = tickvals,
+                          tickmode = "array",
+                          ticktext = as.character(tickvals),
+                          title = list(text=label)),
+             xaxis = list(title = list(text="Measurement")))
   })
 }
