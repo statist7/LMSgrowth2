@@ -107,18 +107,19 @@ source("R/functions.R", local = TRUE)
   calculatedStats <- reactiveVal(value = NULL)
   
   observe({
-    age_in_years()
-    
     # get the available measurements (depends on selected growth reference) and put them in a dataframe
     availableMeasurements <- reactiveValuesToList(measurementCalculated, all.names=FALSE)
     df <- data.frame(matrix(unlist(availableMeasurements), nrow=length(availableMeasurements), byrow=T), stringsAsFactors = FALSE)
     
-    # prevents stale measurements being includes (e.g. when you switch reference)
+    # prevents stale measurements being included (e.g. when you switch reference)
     colnames(df) <- c('SDS', 'Centile', 'Predicted', '% Predicted', '% CV', 'Skewness', 'code')
     df <- df[df$code %in% measurementCalculated$.codes,]
     
     # all the columns are double except 'code' column (keep as string)
-    df <- df %>% tbl_df %>% mutate_at(grep("code|Centile", colnames(.), invert=T), funs(as.numeric)) %>% as.data.frame()
+    df <- df %>% tbl_df %>% 
+      mutate_at(grep("code|Centile", colnames(.), invert=T), funs(as.numeric)) %>% 
+      mutate_if(is.numeric, round, 2) %>% 
+      as.data.frame()
     
     # order the columns by the order they appear in the growth references (and so the input boxes)
     df <- df[order(match(df$code, measurementCalculated$.codes)), ]
@@ -134,8 +135,6 @@ source("R/functions.R", local = TRUE)
       calculatedStats(NULL)
     }
     
-    # round all numeric columns to 2 decimal places
-    df <- df %>% tbl_df %>% mutate_if(is.numeric, round, 2) %>% as.data.frame()
     row.names(df) <- df$description
     df$code <- NULL
     df$description <- NULL
@@ -163,7 +162,7 @@ source("R/functions.R", local = TRUE)
           
           # when the measure input box changes
           observeEvent(
-            c(input[[input_name]], age_in_years()), { 
+            c(input[[input_name]], age_in_years(), input$sex), { 
               # if the input is numerical value TODO: change to req()
               if (is.numeric(input[[input_name]])) {
                 # a helper function to update calculated measurements
@@ -219,7 +218,7 @@ source("R/functions.R", local = TRUE)
       return(NULL)
     }
     
-    default_centiles <- c(2, 9, 25, 50, 75, 91, 98)  # could add 0.4, 99.6?
+    default_centiles <- c(2, 9, 25, 50, 75, 91, 98)  # removed 0.4, 99.6, overlapping
     default_z <- c(-3, -2, -1, 0, 1, 2, 3)
     
     df <- calculatedStats()
