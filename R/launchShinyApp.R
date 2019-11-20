@@ -2,6 +2,8 @@ library(shiny)
 library(shinyjs)
 library(purrr)
 library(stringr)
+library(plotly)
+library(DT)
 
 source('R/calculator.R', local=TRUE)
 source('R/example.R', local=TRUE)

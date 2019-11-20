@@ -56,18 +56,20 @@
         radioButtons(ns("header_centile_or_sds"), label = h4("Header options"),
                      choices = list("Centiles" = "centile", "SDSs" = "sds"),
                      selected = "centile", inline = TRUE),
-
-        conditionalPanel(
-          condition = "output['centile-centileFemale'] || output['centile-centileMale']",
-          downloadButton(ns("download_data"), "Download")
-        )
+        uiOutput(ns("download_ui"))
       ),
       mainPanel(
-        h3(tags$b(textOutput(ns("centilesTitle")))),
-        h4(tags$b(textOutput(ns("centileFemaleCaption")))),
-        tableOutput(ns("centileFemale")),
-        h4(tags$b(textOutput(ns("centileMaleCaption")))),
-        tableOutput(ns("centileMale"))
+        h3(textOutput(ns("centilesTitle"))),
+        h4(textOutput(ns("centileFemaleCaption"))),
+        DTOutput(ns("centileFemale")),
+        br(),
+        uiOutput(ns("centilePlotFemaleUI")),
+        br(),
+        br(),
+        h4(textOutput(ns("centileMaleCaption"))),
+        DTOutput(ns("centileMale")),
+        br(),
+        uiOutput(ns("centilePlotMaleUI"))
       )
     )
   )
@@ -80,6 +82,10 @@
   # Reactive value holding the data for the download.  `f` is the data for
   # female, `m` for male, `total` is the table containing data about all sexes.
   output_data <- reactiveValues(f = NULL, m = NULL, total = NULL)
+  # Reactive values holdin the data for plotting.  This is different from
+  # `output_data` because we may want to sample the data more in order to get a
+  # smoother curve
+  plot_data <- reactiveValues(f = NULL, m = NULL, ages = NULL)
 
   # Function to generate equally spaced SDSs, centred around 0, given their
   # number and the step.
@@ -94,18 +100,21 @@
     (-bound):bound * step
   }
 
+  get_measurement_description <- function() {
+    measurements <- globals$growthReferenceMeasures
+    current_measurement_index <-
+      sapply(measurements, function(m) {m$code}) == input$measure
+    measurement <- measurements[current_measurement_index]
+    paste0(measurement[[1]]$description, " (", measurement[[1]]$unit, ")")
+  }
+
   # Title over the tables
   centilesTitle <- function() {
     renderText({
       references <- .get_references()
       reference_name <-
-        names(references)[references == paste(globals$growthReference)]
-      measurements <- globals$growthReferenceMeasures
-      current_measurement_index <-
-        sapply(measurements, function(m) {m$code}) == input$measure
-      measurement <- measurements[current_measurement_index]
-      measurement_description <- paste0(measurement[[1]]$description, " (",
-                                        measurement[[1]]$unit, ")")
+        names(references)[references == globals$growthReference]
+      measurement_description <- get_measurement_description()
       paste(reference_name, "—", measurement_description)
     })
   }
@@ -126,8 +135,9 @@
 
   # Return the table of the centiles for the given sex
   centiles <- function(sex) {
-    renderTable({
+    renderDT({
       output_data[[sex]] <- NULL
+      plot_data[[sex]] <- NULL
       if (sex %in% input$sex) {
         if (input$customcentiles) {
           if (input$centiles_or_sds == "use_sds") {
@@ -201,22 +211,46 @@
                            toz = FALSE)
         # Set as row names the age, with the given unit
         row.names(df) <- round(.duration_from_years_to_unit(ages, input$ageunit),
-                               digits = 2)
+                               digits = globals$roundToDigits)
         # When we ask to show the SDS in the header of the table, round them to
         # two digits
         if (input$header_centile_or_sds == "sds") {
-          colnames(df) <- round(zs, digits = 2)
+          colnames(df) <- round(zs, digits = globals$roundToDigits)
         }
         # Add the ages as first column
-        df <- cbind(age_column_header =
-                      round(.duration_from_years_to_unit(ages, input$ageunit),
-                            digits = 2), df)
+        ages_to_unit <- .duration_from_years_to_unit(ages, input$ageunit)
+        df <- round(cbind(age_column_header = ages_to_unit,
+                          df), digits = globals$roundToDigits)
         # Rename the column header
         colnames(df)[colnames(df) == "age_column_header"] <- input$ageunit
         # Store the value for the download
         output_data[[sex]] <- as.data.frame(df)
+        # Store the data for plotting.  We want to have at least 100 points, in
+        # order to have smooth curves.
+        npoints_plot <- 100
+        if (length(ages) >= npoints_plot) {
+          # If `output_data[[sex]]` has at least `npoints_plot`, just reuse it,
+          # in order to save some CPU cycles.
+          plot_data[[sex]] <- output_data[[sex]]
+          plot_data$ages <- ages_to_unit
+        } else {
+          plot_ages <- seq(agestart_years, agestop_years,
+                           length.out = npoints_plot)
+          plot_data[[sex]] <- round(as.data.frame(
+            sitar::LMS2z(plot_ages, as.matrix(zs), sex = sex,
+                         measure = input$measure,
+                         ref = getExportedValue('sitar',
+                                                globals$growthReference),
+                         toz = FALSE)),
+            digits = globals$roundToDigits)
+          plot_data$ages <- .duration_from_years_to_unit(plot_ages, input$ageunit)
+        }
         # Finally return the dataframe
-        df
+        output_data[[sex]] %>%
+          datatable(rownames = FALSE,
+                    # See https://stackoverflow.com/a/35627085/2442087 for how
+                    # to hide the search box
+                    options = list(sDom  = '<"top">lrt<"bottom">ip'))
       }
     })
   }
@@ -252,8 +286,24 @@
                                               input$ageunit)
       max_age <- .duration_from_years_to_unit(globals$growthReferenceAgeStop,
                                               input$ageunit)
-      paste0("Range (min: ", round(min_age, digits = 2), "; max: ",
-             round(max_age, digits = 2), " ", input$ageunit, ")")
+      paste0("Range (min: ", round(min_age, digits = globals$roundToDigits),
+             "; max: ", round(max_age, digits = globals$roundToDigits),
+             " ", input$ageunit, ")")
+    })
+  }
+
+  centilesPlot <- function(sex) {
+    renderPlotly({
+      columns <- names(output_data[[sex]])
+      columns <- columns[2:length(columns)]
+      p <- plot_ly(type = "scatter", mode = "line") %>%
+        layout(xaxis = list(title = paste0("Age (", input$ageunit, ")")),
+               yaxis = list(title = get_measurement_description()))
+      for (col in columns) {
+        p <- add_lines(p, x = plot_data$ages, y = plot_data[[sex]][[col]],
+                       type = "scatter", name = col)
+      }
+      p
     })
   }
 
@@ -262,8 +312,25 @@
   output$centilesTitle <- centilesTitle()
   output$centileFemaleCaption <- centilesCaption("f")
   output$centileFemale <- centiles("f")
+  output$centilePlotFemaleUI <- renderUI({
+    if (is.data.frame(output_data$f)) {
+      plotlyOutput(ns("centilePlotFemale"))
+    }
+  })
+  output$centilePlotFemale <- centilesPlot("f")
   output$centileMaleCaption <- centilesCaption("m")
   output$centileMale <- centiles("m")
+  output$centilePlotMaleUI <- renderUI({
+    if (is.data.frame(output_data$m)) {
+      plotlyOutput(ns("centilePlotMale"))
+    }
+  })
+  output$centilePlotMale <- centilesPlot("m")
+  output$download_ui <- renderUI({
+    if (is.data.frame(output_data$total)) {
+      downloadButton(ns("download_data"), "Download")
+    }
+  })
   output$download_data <- downloadHandler(
     filename = 'centiles.csv',
     content = function(file) {
@@ -335,8 +402,9 @@
       max_age <- 0
     }
     new_value <- round(.duration_from_years_to_unit(new_value_years, new_unit),
-                       digits = 2)
-    updateNumericInput(session, id, value = round(new_value, digits = 2),
+                       digits = globals$roundToDigits)
+    updateNumericInput(session, id,
+                       value = round(new_value, digits = globals$roundToDigits),
                        min = min_age, max = max_age)
   }
 

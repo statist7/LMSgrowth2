@@ -19,6 +19,10 @@ source('R/functions.R', local = TRUE)
   status <- reactiveValues(loaded=FALSE)
 
   # object to store global values
+  # globalValues$roundToDigits (numeric)
+  #     - number of decimal digits for rounding
+  # globalValues$roundToSignificantDigits (numeric)
+  #     - number of significant digits for rounding
   # globalValues$growthReference (string)
   #     - the currently selected growth reference e.g. "uk90"
   # globalValues$growthReferenceMeasures (character vector)
@@ -29,7 +33,8 @@ source('R/functions.R', local = TRUE)
   #     - the last age available in currently selected growth reference
   # growthReferenceSexes (string)
   #     - the list of sexes available in currently selected growth reference
-  globalValues <- reactiveValues()
+  globalValues <- reactiveValues(roundToDigits = 2,
+                                 roundToSignificantDigits = 3)
 
   # this block only executed once on page load to apply saved cookie state, if any
   observe({
