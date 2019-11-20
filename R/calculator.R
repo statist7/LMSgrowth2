@@ -5,14 +5,10 @@ source("R/functions.R", local = TRUE)
   ns <- NS(id)
   
   fluidPage(
-    # Sidebar with a slider input for number of bins
     sidebarLayout(
       sidebarPanel(
         h3("Measurement to SDS"),
-        radioButtons(ns("sex"), label = h4("Sex"),
-                     choices = list("Male" = 1, "Female" = 2), 
-                     selected = 1,
-                     inline = T),
+        radioButtons(ns("sex"), label = h4("Sex"), choices = list("Male" = 1, "Female" = 2),  selected = 1, inline = T),
         radioButtons(ns("age_input"), choices = list("Age" = "age", "Dates" = "dates"), selected = "age", label = h4("Age"), inline=TRUE),
         conditionalPanel(
           condition = "input['calculator-age_input'] == 'age'",
@@ -40,14 +36,16 @@ source("R/functions.R", local = TRUE)
   )
 }
 
-# Calculator tab server #######################################################
+# Measurement to SDS calculator server #######################################################
 .calculator <- function(input, output, session, globals) {
   ns <- session$ns
   
   age_in_years <- reactive({
+    # either the age was specified directly
     if (input$age_input == "age") {
       y <- .duration_in_years(input$age_years, input$age_months, input$age_weeks, input$age_days)
     } else {
+      # or calculate age using dob and date of measurement
       y <- .date_diff(input$date_of_measurement, input$date_of_birth)
     }
     round(y, 2)
@@ -71,6 +69,7 @@ source("R/functions.R", local = TRUE)
     return(reference_name)
   })
   
+  # Each row of the output dataframe is stored as a list in this reactiveValue
   measurementCalculated <- reactiveValues()
   
   # create an input box for each measurement in the growth reference
@@ -101,8 +100,6 @@ source("R/functions.R", local = TRUE)
   })
   
   output$measurementTable <- renderFormattable({
-    measurementCalculated
-    
     # get the available measurements (depends on selected growth reference) and put them in a dataframe
     availableMeasurements <- reactiveValuesToList(measurementCalculated, all.names=FALSE)
     df <- data.frame(matrix(unlist(availableMeasurements), nrow=length(availableMeasurements), byrow=T), stringsAsFactors = FALSE)
