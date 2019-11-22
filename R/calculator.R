@@ -7,9 +7,9 @@ source("R/functions.R", local = TRUE)
   fluidPage(
     sidebarLayout(
       sidebarPanel(
-        h3("Measurement to SDS"),
+        h3("Single date calculator"),
         radioButtons(ns("sex"), label = h4("Sex"), choices = list("Male" = 1, "Female" = 2),  selected = 1, inline = T),
-        radioButtons(ns("age_input"), choices = list("Age" = "age", "Dates" = "dates"), selected = "age", label = h4("Age"), inline=TRUE),
+        radioButtons(ns("age_input"), choices = list("Age" = "age", "Date" = "dates"), selected = "age", label = h4("Age"), inline=TRUE),
         conditionalPanel(
           condition = "input['calculator-age_input'] == 'age'",
           fluidRow(
@@ -25,7 +25,7 @@ source("R/functions.R", local = TRUE)
         h4("Measurements"),
         uiOutput(ns("measurementInputs")),
         h4("Plot options"),
-        radioButtons(ns("plotYAxis"), label = h4("Y axis"), choices = list("Centile", "z-score"), selected = "Centile", inline = T)
+        radioButtons(ns("plotYAxis"), label = NULL, choices = list("Centile", "z-score"), selected = "Centile", inline = T)
       ),
       
       # Show a plot of the generated distribution
@@ -52,8 +52,6 @@ source("R/functions.R", local = TRUE)
       y <- .date_diff(input$date_of_measurement, input$date_of_birth)
     }
     round(y, 2)
-    
-    # TODO: set max based on growth reference
   })
   
   output$age_info <- renderText({
@@ -83,20 +81,19 @@ source("R/functions.R", local = TRUE)
     measure_codes <- globals$growthReferenceMeasures %>% map_chr(function(x) { x[['code']] })
     measurementCalculated[['.codes']] <- measure_codes
     
+    # TODO: reset measurements that don't exist
+    
     measures <- lapply(globals$growthReferenceMeasures,
            function(measure) {
-             measurementCalculated[[measure$code]] <- list(sds=NA, centile=2, pred=3, pred_perc=4, cv_perc=5, skewness=6, code=measure$code)
-             
-             # TODO: this is not working, output is not refreshed when reference changed
-             # keep the current input value for the measure, if it exists
-             # current_value <- isolate(input[[measure$code]])
-             # if (is.null(current_value)) {
-             #   current_value <- measure$default
-             # }
+             current_value <- isolate(input[[measure$code]])
+             if (!is.numeric(current_value)) {
+               current_value <- measure$default
+               measurementCalculated[[measure$code]] <- list(sds=NA, centile=NA, pred=NA, pred_perc=NA, cv_perc=NA, skewness=NA, code=measure$code)
+             }
              
              numericInput(ns(measure$code), 
                           paste0(measure$description, " (", measure$unit, ")"),
-                          value=measure$default,
+                          value=current_value,
                           min=measure$min,
                           max=measure$max)
              
@@ -104,24 +101,35 @@ source("R/functions.R", local = TRUE)
     do.call(tagList, measures)
   })
   
+  validate_input <- function() {
+    if (age_in_years() == 0) {
+      return("Enter child's age at date of measurement.")
+    } else if (age_in_years() > globals$growthReferenceAgeStop) {
+      return("Age is out-of-range for selected growth reference.")
+    }
+    NULL
+  }
+  
   calculatedStats <- reactiveVal(value = NULL)
   
   observe({
+    validate(
+      validate_input()
+    )
     # get the available measurements (depends on selected growth reference) and put them in a dataframe
     availableMeasurements <- reactiveValuesToList(measurementCalculated, all.names=FALSE)
-    df <- data.frame(matrix(unlist(availableMeasurements), nrow=length(availableMeasurements), byrow=T), stringsAsFactors = FALSE)
-    
-    # prevents stale measurements being included (e.g. when you switch reference)
+    df <- data.frame(matrix(unlist(availableMeasurements), ncol=7, byrow=T), stringsAsFactors = FALSE)
+    # prevent missing measurements being included (e.g. when you switch reference)
     colnames(df) <- c('SDS', 'Centile', 'Predicted', '% Predicted', '% CV', 'Skewness', 'code')
     df <- df[df$code %in% measurementCalculated$.codes,]
     
-    # all the columns are double except 'code' column (keep as string)
+    # all the columns are double except 'code' and 'Centile' columns (keep them as string)
     df <- df %>% tbl_df %>% 
       mutate_at(grep("code|Centile", colnames(.), invert=T), funs(as.numeric)) %>% 
       mutate_if(is.numeric, round, 2) %>% 
       as.data.frame()
     
-    # order the columns by the order they appear in the growth references (and so the input boxes)
+    # order the columns by the order they appear in the growth reference/input boxes
     df <- df[order(match(df$code, measurementCalculated$.codes)), ]
     
     # use the descriptive name of measurement
@@ -131,6 +139,7 @@ source("R/functions.R", local = TRUE)
     # remove all measurements that don't have calculations
     df <- df[!(is.na(df$SDS)), ]
     
+    # don't display anything if there aren't any stats
     if (nrow(df) == 0) {
       calculatedStats(NULL)
     }
@@ -143,7 +152,10 @@ source("R/functions.R", local = TRUE)
   })
   
   output$measurementTable <- renderFormattable({
-    if (nrow(calculatedStats()) > 0) {
+    validate(
+      validate_input()
+    )
+    if (is.data.frame(calculatedStats()) &&  nrow(calculatedStats()) > 0) {
       formattable(calculatedStats(), list())
     } else {
       formattable(data.frame(), list())
@@ -180,7 +192,7 @@ source("R/functions.R", local = TRUE)
                 update_mc('skewness', .get_skewness(lms_stats))
               } else {
                 # this measurement has not been set (SDS value is NA, the rest don't matter)
-                measurementCalculated[[input_name]]$sds <- NA
+                measurementCalculated[[input_name]] <- list(sds=NA, centile=NA, pred=NA, pred_perc=NA, cv_perc=NA, skewness=NA, code=input_name)
               }
           }) # end observeEvent()
         }) # end local()
@@ -213,8 +225,11 @@ source("R/functions.R", local = TRUE)
   observeEvent(c(input$ht, input$sitht), { set_leglen() })
   
   output$measurementPlot <- renderPlotly({
-    age_in_years()
-    if (nrow(calculatedStats()) == 0) {
+    validate(
+      validate_input()
+    )
+    
+    if (!is.data.frame(calculatedStats()) || nrow(calculatedStats()) == 0) {
       return(NULL)
     }
     
@@ -238,7 +253,7 @@ source("R/functions.R", local = TRUE)
     
     label <- input$plotYAxis
     
-    plot_ly(x = ~measurement_names, y = ~measurement_y, type="scatter", mode="markers") %>% 
+    plot_ly(x = ~measurement_names, y = ~measurement_y, type="scatter", mode="markers", marker = list(size = 10)) %>% 
       layout(yaxis = list(autorange = FALSE, 
                           range = range,
                           tickvals = tickvals,
