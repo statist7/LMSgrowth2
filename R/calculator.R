@@ -78,8 +78,7 @@ source("R/functions.R", local = TRUE)
   # create an input box for each measurement in the growth reference
   output$measurementInputs <- renderUI({
     # keep an ordered list of measurements
-    measure_codes <- globals$growthReferenceMeasures %>% map_chr(function(x) { x[['code']] })
-    measurementCalculated[['.codes']] <- measure_codes
+    measurementCalculated[['.codes']] <- globals$growthReferenceMeasures %>% map_chr(function(x) { x[['code']] })
     
     # TODO: reset measurements that don't exist
     
