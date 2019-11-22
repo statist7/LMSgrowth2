@@ -299,7 +299,7 @@
       p <- plot_ly(type = "scatter", mode = "line") %>%
         layout(xaxis = list(title = paste0("Age (", input$ageunit, ")")),
                yaxis = list(title = get_measurement_description()))
-      for (col in columns) {
+      for (col in rev(columns)) {
         p <- add_lines(p, x = plot_data$ages, y = plot_data[[sex]][[col]],
                        type = "scatter", name = col)
       }
