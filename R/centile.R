@@ -236,13 +236,12 @@
         } else {
           plot_ages <- seq(agestart_years, agestop_years,
                            length.out = npoints_plot)
-          plot_data[[sex]] <- round(as.data.frame(
+          plot_data[[sex]] <- as.data.frame(
             sitar::LMS2z(plot_ages, as.matrix(zs), sex = sex,
                          measure = input$measure,
                          ref = getExportedValue('sitar',
                                                 globals$growthReference),
-                         toz = FALSE)),
-            digits = globals$roundToDigits)
+                         toz = FALSE))
           plot_data$ages <- .duration_from_years_to_unit(plot_ages, input$ageunit)
         }
         # Finally return the dataframe
@@ -301,7 +300,14 @@
                yaxis = list(title = get_measurement_description()))
       for (col in rev(columns)) {
         p <- add_lines(p, x = plot_data$ages, y = plot_data[[sex]][[col]],
-                       type = "scatter", name = col)
+                       type = "scatter", name = col, hoverinfo = "name+text",
+                       hovertext = paste0("(",
+                                          signif(plot_data$ages,
+                                                 globals$roundToSignificantDigits),
+                                          ", ",
+                                          signif(plot_data[[sex]][[col]],
+                                                 globals$roundToSignificantDigits),
+                                          ")"))
       }
       p
     })
