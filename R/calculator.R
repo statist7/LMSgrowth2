@@ -61,7 +61,7 @@ source("R/functions.R", local = TRUE)
       } else {
         sex_str <- "Female"
       }
-      paste(sex_str, ", ", age_in_years(), " years", sep="")  
+      paste0(sex_str, ", ", age_in_years(), " years")
     }
   })
   
