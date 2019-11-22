@@ -51,7 +51,7 @@ source("R/functions.R", local = TRUE)
       # or calculate age using dob and date of measurement
       y <- .date_diff(input$date_of_measurement, input$date_of_birth)
     }
-    round(y, 2)
+    round(y, globals$roundToDigits)
   })
   
   output$age_info <- renderText({
@@ -208,7 +208,7 @@ source("R/functions.R", local = TRUE)
   set_bmi <- function() {
     if (exists_and_is_numeric("ht") && exists_and_is_numeric("wt")) {
         bmi <- input$wt/(input$ht/100)^2
-        bmi <- round(bmi, 2)
+        bmi <- round(bmi, globals$roundToDigits)
         updateNumericInput(session, "bmi", value=bmi)
       }
   }
@@ -218,7 +218,7 @@ source("R/functions.R", local = TRUE)
   set_leglen <- function() {
     if (exists_and_is_numeric("ht") && exists_and_is_numeric("sitht")) {
         leglen <- input$ht - input$sitht
-        leglen <- round(leglen, 2)
+        leglen <- round(leglen, globals$roundToDigits)
         updateNumericInput(session, "leglen", value=leglen)
     }
   }
