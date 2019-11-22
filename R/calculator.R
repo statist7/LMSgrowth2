@@ -246,7 +246,7 @@ source("R/functions.R", local = TRUE)
       tickvals <- default_z
     } else {
       measurement_y <- as.numeric(gsub("([0-9]+).*$", "\\1", df$Centile))
-      range <- c(default_centiles[1], default_centiles[length(default_centiles)])
+      range <- c(-2, 102)
       tickvals <- default_centiles
     }
     
@@ -258,7 +258,8 @@ source("R/functions.R", local = TRUE)
                           tickvals = tickvals,
                           tickmode = "array",
                           ticktext = as.character(tickvals),
-                          title = list(text=label)),
+                          title = list(text=label),
+                          zeroline = FALSE),
              xaxis = list(title = list(text="Measurement")))
   })
 }
