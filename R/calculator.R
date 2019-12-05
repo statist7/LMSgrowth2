@@ -233,7 +233,6 @@ source("R/functions.R", local = TRUE)
     }
     
     default_centiles <- c(2, 9, 25, 50, 75, 91, 98)  # removed 0.4, 99.6, overlapping
-    default_z <- c(-3, -2, -1, 0, 1, 2, 3)
     
     df <- calculated_statistics()
     
@@ -242,17 +241,27 @@ source("R/functions.R", local = TRUE)
     
     if (input$plot_axis_select == "z-score") {
       measurement_y <- df$SDS
-      range <- c(default_z[1], default_z[length(default_z)])
-      tickvals <- default_z
+      range <- c(floor(min(df$SDS)) - 1, ceiling(max(df$SDS)) + 1)
+      tickvals <- seq(range[1], range[2])
     } else {
       measurement_y <- as.numeric(gsub("([0-9]+).*$", "\\1", df$Centile))
+      # there might be some which are SDS, replace
+      measurement_y[stringr::str_detect(df$Centile, 'SDS\\+')] <- 100
+      measurement_y[stringr::str_detect(df$Centile, 'SDS\\-')] <- 0
       range <- c(-2, 102)
       tickvals <- default_centiles
     }
     
     label <- input$plot_axis_select
     
-    plot_ly(x = ~measurement_names, y = ~measurement_y, type="scatter", mode="markers", marker = list(size = 10)) %>% 
+    plot_ly(x = ~measurement_names, 
+            y = ~measurement_y, 
+            type="scatter", 
+            mode="markers", 
+            marker = list(size = 10), 
+            hoverinfo = "text", 
+            hovertext = paste0("(", measurement_names, "; z = ", df$SDS, "; centile = ", df$Centile,  ")")
+            ) %>% 
       layout(yaxis = list(autorange = FALSE, 
                           range = range,
                           tickvals = tickvals,
