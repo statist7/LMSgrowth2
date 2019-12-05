@@ -67,9 +67,7 @@ source("R/functions.R", local = TRUE)
   
   # display the currently selected growth reference
   output$growth_ref <- renderText({
-    references <- .get_references()
-    reference_name <- names(references)[references == globals$growthReference]
-    return(reference_name)
+    globals$growthReferenceName
   })
   
   # Hold a list of lists of all possible measurements - some will be calculated, others not

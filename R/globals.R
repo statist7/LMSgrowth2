@@ -49,6 +49,8 @@ source('R/functions.R', local = TRUE)
   observeEvent(input$growth_ref, {
     js$setcookie(name='growthRef', value=input$growth_ref)
     globalValues$growthReference <- input$growth_ref
+    references <- .get_references()
+    globalValues$growthReferenceName <- names(references)[references == globalValues$growthReference]
     sitar_data <- .get_sitar_data(input$growth_ref)
     globalValues$growthReferenceMeasures <- .get_measures_for_data(sitar_data)
     ages <- .get_ages_for_data(sitar_data)
