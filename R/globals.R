@@ -25,6 +25,8 @@ source('R/functions.R', local = TRUE)
   #     - number of significant digits for rounding
   # globalValues$growthReference (string)
   #     - the currently selected growth reference e.g. "uk90"
+  # globalValues$growthReferenceName (string)
+  #     - description of selected growth reference e.g. "UK 1990 growth reference"
   # globalValues$growthReferenceMeasures (character vector)
   #     - code of measures available in currently selected growth reference
   # growthReferenceAgeStart (numeric)
