@@ -133,6 +133,12 @@ Source: CRAN
 Version: 0.4.0
 Hash: f147621f72b561485bfffcae78c4f5d5
 
+Package: formattable
+Source: CRAN
+Version: 0.2.0.1
+Hash: 64836860c4666eadc229c6e47fdd2261
+Requires: htmltools, htmlwidgets, knitr, rmarkdown
+
 Package: generics
 Source: CRAN
 Version: 0.0.2
@@ -159,6 +165,11 @@ Package: hexbin
 Source: CRAN
 Version: 1.28.0
 Hash: cb783773009a64806fc1e308f3d35f94
+
+Package: highr
+Source: CRAN
+Version: 0.8
+Hash: 16aa2cc98d7b68c9d148c263c8dcdbcd
 
 Package: htmltools
 Source: CRAN
@@ -189,6 +200,12 @@ Source: CRAN
 Version: 1.6
 Hash: 5f969e213e966135393e3e304abf3f49
 
+Package: knitr
+Source: CRAN
+Version: 1.25
+Hash: c0b5316240a79d38f4785884b95a9609
+Requires: evaluate, highr, markdown, stringr, xfun, yaml
+
 Package: labeling
 Source: CRAN
 Version: 0.3
@@ -209,6 +226,12 @@ Package: magrittr
 Source: CRAN
 Version: 1.5
 Hash: bdc4d48c3135e8f3b399536ddf160df4
+
+Package: markdown
+Source: CRAN
+Version: 1.1
+Hash: 1b6a18fd395589425e338a47b999099f
+Requires: mime, xfun
 
 Package: mime
 Source: CRAN
@@ -242,7 +265,7 @@ Package: pkgbuild
 Source: CRAN
 Version: 1.0.6
 Hash: f41de345bf0dda984cce64a7ea668ea4
-Requires: R6, callr, cli, crayon, desc, prettyunits, rprojroot, withr
+Requires: R6, crayon, withr, rprojroot, cli, prettyunits, desc, callr
 
 Package: pkgconfig
 Source: CRAN
@@ -253,7 +276,7 @@ Package: pkgload
 Source: CRAN
 Version: 1.0.2
 Hash: 41eb2db35be61f6f9e8864cf87a1ecb0
-Requires: desc, pkgbuild, rlang, rprojroot, rstudioapi, withr
+Requires: rlang, rstudioapi, withr, rprojroot, desc, pkgbuild
 
 Package: plogr
 Source: CRAN
@@ -311,8 +334,8 @@ Requires: magrittr, rlang
 
 Package: quantreg
 Source: CRAN
-Version: 5.42.1
-Hash: 88c3fda02d01f1b056f346073c37e9fc
+Version: 5.51
+Hash: c033bb7d423f4a77834e64c21dfa1399
 Requires: MatrixModels, SparseM
 
 Package: reshape2
@@ -325,6 +348,13 @@ Package: rlang
 Source: CRAN
 Version: 0.4.1
 Hash: 686b7c4593f009713b9df03a2bb33124
+
+Package: rmarkdown
+Source: CRAN
+Version: 1.16
+Hash: 1f3014c40b12e8af0abf39fd78080237
+Requires: base64enc, evaluate, htmltools, jsonlite, knitr, mime,
+    stringr, tinytex, xfun, yaml
 
 Package: rprojroot
 Source: CRAN
@@ -400,7 +430,7 @@ Source: CRAN
 Version: 2.0.1
 Hash: 777eb6e94f5a62bf6320fecf0175bbbb
 Requires: R6, crayon, digest, evaluate, magrittr, praise, rlang, withr,
-    cli
+    cli, ellipsis, pkgload
 
 Package: tibble
 Source: CRAN
@@ -421,6 +451,12 @@ Version: 0.2.5
 Hash: ce32c88efe672d565819caa17238b04c
 Requires: Rcpp, glue, purrr, rlang
 
+Package: tinytex
+Source: CRAN
+Version: 0.17
+Hash: 9da7bd371440e0f6b3bbe26cda55e374
+Requires: xfun
+
 Package: utf8
 Source: CRAN
 Version: 1.1.4
@@ -435,6 +471,11 @@ Package: withr
 Source: CRAN
 Version: 2.1.2
 Hash: d534108bcd5f34ec73e9eb523751ba20
+
+Package: xfun
+Source: CRAN
+Version: 0.10
+Hash: 83f0de50249d263dfbce9b3aa6d3109a
 
 Package: xtable
 Source: CRAN

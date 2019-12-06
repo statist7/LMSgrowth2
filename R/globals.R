@@ -25,6 +25,8 @@ source('R/functions.R', local = TRUE)
   #     - number of significant digits for rounding
   # globalValues$growthReference (string)
   #     - the currently selected growth reference e.g. "uk90"
+  # globalValues$growthReferenceName (string)
+  #     - description of selected growth reference e.g. "UK 1990 growth reference"
   # globalValues$growthReferenceMeasures (character vector)
   #     - code of measures available in currently selected growth reference
   # growthReferenceAgeStart (numeric)
@@ -49,6 +51,8 @@ source('R/functions.R', local = TRUE)
   observeEvent(input$growth_ref, {
     js$setcookie(name='growthRef', value=input$growth_ref)
     globalValues$growthReference <- input$growth_ref
+    references <- .get_references()
+    globalValues$growthReferenceName <- names(references)[references == globalValues$growthReference]
     sitar_data <- .get_sitar_data(input$growth_ref)
     globalValues$growthReferenceMeasures <- .get_measures_for_data(sitar_data)
     ages <- .get_ages_for_data(sitar_data)

@@ -111,11 +111,8 @@
   # Title over the tables
   centilesTitle <- function() {
     renderText({
-      references <- .get_references()
-      reference_name <-
-        names(references)[references == globals$growthReference]
       measurement_description <- get_measurement_description()
-      paste(reference_name, "—", measurement_description)
+      paste(globals$growthReferenceName, "—", measurement_description)
     })
   }
 
