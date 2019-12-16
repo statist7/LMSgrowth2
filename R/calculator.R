@@ -22,6 +22,13 @@ source("R/functions.R", local = TRUE)
           dateInput(ns("date_of_birth"), "Birth"),
           dateInput(ns("date_of_measurement"), "Measurement")
         ),
+        checkboxInput(ns("adjust_gestation"), label = "Adjust for gestational age",
+                      value = FALSE),
+        conditionalPanel(
+          condition = "input['calculator-adjust_gestation']",
+          numericInput(ns("gestational_age"), label = "Gestational age (weeks)",
+                       value = 40, min = 0, max = 100)
+        ),
         h4("Measurements"),
         uiOutput(ns("measurement_inputs")),
         h4("Plot options"),
@@ -195,7 +202,8 @@ source("R/functions.R", local = TRUE)
           
           # when the measure input box changes
           observeEvent(
-            c(input[[input_name]], age_in_years(), input$sex), { 
+            c(input[[input_name]], age_in_years(), input$sex,
+              input$adjust_gestation, input$gestational_age), {
               # if the input is numerical value TODO: change to req()
               if (is.numeric(input[[input_name]])) {
                 # a helper function to update calculated measurements
@@ -204,7 +212,12 @@ source("R/functions.R", local = TRUE)
                 }
                 
                 # get and set the lms statistics for this measure
-                lms_stats <- .measurement_to_scores(age_in_years(), input$sex, input_name, input[[input_name]], globals$growthReference)
+                if (input$adjust_gestation) {
+                  age <- .adjust_age(age_in_years(), input$gestational_age)
+                } else {
+                  age <- age_in_years()
+                }
+                lms_stats <- .measurement_to_scores(age, input$sex, input_name, input[[input_name]], globals$growthReference)
                 update_mc('sds', .get_sds(lms_stats))
                 update_mc('centile', .get_centile(lms_stats))
                 update_mc('pred', .get_predicted(lms_stats))

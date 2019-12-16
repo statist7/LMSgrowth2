@@ -56,6 +56,16 @@
                                "days")
 }
 
+#' returns the age of the child adjusted by gestational age.
+# All ages are in years
+.adjust_age <- function(postnatal_age, gestational_age) {
+  if (postnatal_age < 2) {
+    postnatal_age + .duration_from_unit_to_years(gestational_age - 40, "weeks")
+  } else {
+    postnatal_age
+  }
+}
+
 #' returns the SDS and L M & S values for a given measurement 
 .measurement_to_scores <- function(age_y, sex, measure, value, ref) {
   selected_ref <- getExportedValue('sitar', ref)
