@@ -16,6 +16,7 @@
         
         conditionalPanel(
           condition = "output['multiple-uploaded'] == true",
+          selectInput(ns("id"),  label = "ID",  choices = c('NOT POPULATED')),
           selectInput(ns("sex"),  label = "Sex",  choices = c('NOT POPULATED')),
           selectInput(ns("age_source"), "Age", c('NOT POPULATED')),
           selectInput(ns("age_unit"), "Unit of age", choices = c('Days', 'Weeks', 'Months', 'Years')),
@@ -35,7 +36,8 @@
 
       mainPanel(
         h3(textOutput(ns("growth_ref"))),
-        DTOutput(ns("table"))
+        DTOutput(ns("table")),
+        uiOutput(ns("measurements_plots"))
       )
     )
   )
@@ -92,15 +94,28 @@
       original_data$initialised = TRUE
       uploaded = TRUE
 
+      # update ID dropdown
+      selected <- get_selected("id", "")
+      if (selected != "") {
+        updateSelectInput(session, "id", choices = column_options(),  selected = selected)
+        # The ID column may not be stored as a factor, which would make it hard to
+        # use it as a filter in the DT table.
+        id_column_name <- strsplit(selected, split=" ")[[1]][2]
+        original_data$df[[id_column_name]] <- as.factor(original_data$df[[id_column_name]])
+      }
+
       # update sex dropdown
       selected <- get_selected("sex", 'Male')
-      choices <-  c('Male', 'Female', column_options())
-      updateSelectInput(session, 'sex', choices = choices,  selected = selected)
-      
+      if (selected != "") {
+        choices <-  c('Male', 'Female', column_options())
+        updateSelectInput(session, 'sex', choices = choices,  selected = selected)
+      }
+
       # update age
       selected <- get_selected("age", '')
-      updateSelectInput(session, 'age_source', choices = column_options(), selected = selected)
-      selected <- get_selected("age", 'Days')
+      if (selected != "") {
+        updateSelectInput(session, 'age_source', choices = column_options(), selected = selected)
+      }
     }
   })
 
@@ -116,6 +131,8 @@
   get_selected <- function(code, default) {
     if (code == "age") {
       to_match = '[Aa]ge|[Yy]ears|[Dd]ays|[Ww]eeks'
+    } else if (code == "id") {
+      to_match = '[Ii][Dd]'
     } else if (code == "sex") {
       to_match = '[Ss]ex|[Gg]ender'
     } else if (code == "ht") {
@@ -162,9 +179,14 @@
   get_age <- function() {
       df <- isolate(original_data$df)
       age_column_or_value <- isolate(input$age_source)
-      age_unit <- stringr::str_to_lower(isolate(input$age_unit))
-
       age_column = df[, strsplit(age_column_or_value, split=" ")[[1]][[2]]]
+      return(age_column)
+  }
+
+  # returns the age column or value in years
+  get_age_in_years <- function() {
+      age_column = get_age()
+      age_unit <- stringr::str_to_lower(isolate(input$age_unit))
 
       # transform age into years if necessary
       if (age_unit != 'years') {
@@ -188,7 +210,6 @@
 
   do_calculation_for_measurement <- function(measurement, df, new_columns) {
       value <- input[[measurement$code]]
-      input_name <- measurement$description
       code_name <- measurement$code
       if (!is.null(value) && value != 'N/A') {
         # a function that returns column name for a given statistics
@@ -197,7 +218,7 @@
         }
         column = strsplit(value, split=" ")[[1]][2]
         sex_column_or_value <- get_sex()
-        age_column_or_value <- get_age()
+        age_column_or_value <- get_age_in_years()
 
         lms_stats <- .measurement_to_scores(age_column_or_value, sex_column_or_value, code_name, df[, column], ref=globals$growthReference)
 
@@ -218,6 +239,33 @@
 
       return(new_columns)
   }
+
+  plot_measure <- function(measure, column_name) {
+    renderPlotly({
+      age_unit <- stringr::str_to_lower(isolate(input$age_unit))
+      plt <- plot_ly(type = "scatter", mode = "markers") %>%
+        layout(xaxis = list(title = paste0("Age (", age_unit, ")")),
+               yaxis = list(title = paste0(measure$description, " (", measure$unit, ")")),
+               showlegend = FALSE)
+      add_trace(plt, x = get_age()[input$table_rows_all],
+                y = original_data$df[input$table_rows_all,column_name])
+    })
+  }
+
+  output$measurements_plots <- renderUI({
+    if (original_data$initialised) {
+      plots <- lapply(globals$growthReferenceMeasures,
+                      function(measure) {
+                        value <- input[[measure$code]]
+                        if (!is.null(value) && value != 'N/A') {
+                          column_name <- sub("\\[Column\\] ", "", value)
+                          output[[paste0("plot_", measure$code)]] <- plot_measure(measure, column_name)
+                          plotlyOutput(ns(paste0("plot_", measure$code)))
+                        }
+                      })
+      do.call(tagList, plots)
+    }
+  })
 
   output$download_data <- downloadHandler(
     filename = 'lms_download.csv',
