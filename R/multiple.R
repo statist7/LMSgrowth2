@@ -19,11 +19,9 @@
           selectInput(ns("sex"),  label = "Sex",  choices = c('NOT POPULATED')),
           selectInput(ns("age_source"), "Age", c('NOT POPULATED')),
           selectInput(ns("age_unit"), "Unit of age", choices = c('Days', 'Weeks', 'Months', 'Years')),
-          selectInput(ns("height"), "Height (cm)", c('NOT POPULATED')),
-          selectInput(ns("weight"), "Weight (kg)", c('NOT POPULATED')),
-          selectInput(ns("bmi"), "BMI (kg/m^2)", c('NOT POPULATED')),
-          selectInput(ns("sitht"), "Sitting height (cm)", c('NOT POPULATED')),
-          selectInput(ns("leglen"), "Leg length (cm)", c('NOT POPULATED')),
+
+          uiOutput(ns("measurement_inputs")),
+
           selectInput(ns("to_add"),
                       "Calculate",
                       c("SDS", "Centile", "% Predicted", "Predicted", "% CV", "Skewness"),
@@ -36,7 +34,8 @@
       ),
 
       mainPanel(
-        div(style='height:600px; overflow-y: scroll', tableOutput(ns("table")))
+        h3(textOutput(ns("growth_ref"))),
+        DTOutput(ns("table"))
       )
     )
   )
@@ -50,61 +49,101 @@
   # to hold the original uploaded data
   original_data <- reactiveValues(
     df = NULL,
+    # `offset` is the index of the last column of the original data
+    offset = 0,
     initialised = FALSE
   )
   
   # the original columns in the uploaded spreadhsheet
   original_columns <- reactiveVal(NULL)
+  # list of column options
+  column_options <- reactiveVal(NULL)
+
+  # display the currently selected growth reference
+  output$growth_ref <- renderText({
+    globals$growthReferenceName
+  })
+
+  # create input tags for each measurement available in the selected growth reference
+  output$measurement_inputs <- renderUI({
+    choices <-  c('N/A', column_options())
+
+    measures <- lapply(globals$growthReferenceMeasures,
+                       function(measure) {
+                         selectInput(ns(measure$code), paste0(measure$description, " (", measure$unit, ")"),
+                                     choices = choices, selected = get_selected(measure$code, 'N/A'))
+                       })
+    do.call(tagList, measures)
+  })
+
 
   # save uploaded data and update options
-  observe({
+  observeEvent(input$file, {
     if(!is.null(input$file)) {
       df <- as.data.frame(read.csv(input$file$datapath))
+      numeric_columns <- vapply(df, is.numeric, FUN.VALUE = logical(1))
+      df[,numeric_columns] <- round(df[,numeric_columns],
+                                    digits = globals$roundToDigits)
       original_columns(names(df))
+      # columns in the dataframe are prefixed
+      column_options(paste('[Column]', isolate(original_columns()), sep = ' '))
       original_data$df <- df
+      original_data$offset <- ncol(original_data$df)
       original_data$initialised = TRUE
       uploaded = TRUE
-      
-      # columns in the dataframe are prefixed
-      column_options <- paste('[Column]', isolate(original_columns()), sep = ' ')
-      
+
       # update sex dropdown
-      selected <- get_selected('[Ss]ex|[Gg]ender', 'Male')
-      choices <-  c('Male', 'Female', column_options)
+      selected <- get_selected("sex", 'Male')
+      choices <-  c('Male', 'Female', column_options())
       updateSelectInput(session, 'sex', choices = choices,  selected = selected)
       
       # update age
-      selected <- get_selected('[Aa]ge|[Yy]ears|[Dd]ays|[Ww]eeks', '')
-      updateSelectInput(session, 'age_source', choices = column_options, selected = selected)
-      selected <- get_selected('[Aa]ge|[Yy]ears|[Dd]ays|[Ww]eeks', 'Days')
-      
-      # update other choices
-      choices <-  c('N/A', column_options)
-      updateSelectInput(session, "height", choices = choices, selected = get_selected('[Hh]eight', 'N/A'))
-      updateSelectInput(session, "weight", choices = choices, selected = get_selected(c('[Ww]eight'), 'N/A'))
-      updateSelectInput(session, "bmi", choices = choices, selected = get_selected(c('BMI|bmi'), 'N/A'))
-      updateSelectInput(session, "sitht", choices = choices, 'N/A')
-      updateSelectInput(session, "leglen", choices = choices, 'N/A')
+      selected <- get_selected("age", '')
+      updateSelectInput(session, 'age_source', choices = column_options(), selected = selected)
+      selected <- get_selected("age", 'Days')
     }
   })
 
-  # outputs the dataframe in the main panel
-  output$table <- renderTable(original_data$df)
+  # outputs the datatable in the main panel
+  output$table <- renderDT(datatable(original_data$df,
+                                     filter = "top",
+                                     rownames = FALSE,
+                                     options = list(scrollX = TRUE,
+                                                    sDom  = '<"top">lrt<"bottom">ip')))
 
-  # fills the 'selected' argument for selectInput when column names matches a regular expression
-  get_selected <- function(to_match, default) {
+  # fills the 'selected' argument for selectInput when column names matches a regular expression.
+  # `code` is a short name for the item that we want to match in the list of columns
+  get_selected <- function(code, default) {
+    if (code == "age") {
+      to_match = '[Aa]ge|[Yy]ears|[Dd]ays|[Ww]eeks'
+    } else if (code == "sex") {
+      to_match = '[Ss]ex|[Gg]ender'
+    } else if (code == "ht") {
+      to_match = "[Hh]eight"
+    } else if (code == "wt") {
+      to_match = "[Ww]eight"
+    } else if (code == "bmi") {
+      to_match = "BMI|bmi"
+    } else if (code == "head") {
+      to_match = "[Hh]ead"
+    } else {
+      return(default)
+    }
     match <- original_columns() %>% isolate %>% stringr::str_detect(to_match) %>% which
     { if (length(match) > 0) paste('[Column]', original_columns()[match[1]]) else default }
   }
 
   # when the 'apply' button is clicked
   observeEvent(input$apply, {
-    df <- isolate(original_data$df)
+    df <- original_data$df[seq(1, original_data$offset)]
+    # Initialise `new_columns` as a dataframe with the same rows as the original
+    # data, but with no columns
+    new_columns = df[0]
     # loop over every measurement
-    for (item in measurement_names) {
-      df <- do_calculation_for_measurement(item$name, df)
+    for (item in globals$growthReferenceMeasures) {
+      new_columns <- do_calculation_for_measurement(item, df, new_columns)
     }
-    original_data$df <- df
+    original_data$df <- cbind(df, new_columns)
   })
 
   # returns the sex column or value
@@ -137,16 +176,6 @@
       return(age_column)
   }
 
-  # list of possible calculations available
-  # TODO: populate from selected reference sheet
-  measurement_names <- list(
-    height=list(name='height', code='ht'),
-    weight=list(name='weight', code='wt'),
-    bmi=list(name='bmi', code='bmi'),
-    sitht=list(name='sitht', code='sitht'),
-    leglen=list(name='leglen', code='leglen')
-  )
-
   # list of the various statistics and the associated function
   calculations <- list(
     list(name='SDS', column_name='SDS', func=.get_sds),
@@ -157,11 +186,10 @@
     list(name='Skewness', column_name='Skewness', func=.get_skewness)
   )
 
-  do_calculation_for_measurement <- function(measurement_name, df) {
-      value <- input[[measurement_name]]
-      input_name <- measurement_names[[measurement_name]]$name
-      code_name <- measurement_names[[measurement_name]]$code
-
+  do_calculation_for_measurement <- function(measurement, df, new_columns) {
+      value <- input[[measurement$code]]
+      input_name <- measurement$description
+      code_name <- measurement$code
       if (!is.null(value) && value != 'N/A') {
         # a function that returns column name for a given statistics
         new_col <- function(stat, column, code_name) {
@@ -177,18 +205,18 @@
         for (calc in calculations) {
             # if the user asked for this statistics
             if (calc$name %in% input$to_add) {
-                # calculate using the appropriate function and add a new column to the dataframe
-                df[[new_col(calc$column_name, column, code_name)]] <- calc$func(lms_stats)
+              # calculate using the appropriate function and add a new column to the dataframe
+              result <- calc$func(lms_stats)
+              if (is.numeric(result)) {
+                result <- round(result, digits = globals$roundToDigits)
+              }
+              new_columns[[new_col(calc$column_name, column, code_name)]] <- result
             }
         }
 
-      } else {
-        # remove old columns
-        df <- df[, !colnames(df) %in% measurement_names[[measurement_name]]$columns]
-        measurement_names[[measurement_name]]$columns <- c()
       }
 
-      return(df)
+      return(new_columns)
   }
 
   output$download_data <- downloadHandler(
@@ -203,4 +231,3 @@
   
 
 }
-

@@ -13,7 +13,7 @@ cache:
   packages: true
 
 install:
-  - R -e "install.packages(c('devtools', 'usethis', 'testthat'))"
+  - R -e "install.packages(c('devtools', 'usethis', 'testthat', 'packrat'))"
   - R -e "0" --args --bootstrap-packrat
   - R -e "packrat::restore(restart = FALSE)"
 

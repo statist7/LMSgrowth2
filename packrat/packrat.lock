@@ -96,8 +96,8 @@ Hash: 3d7392b36f838a538683f98e580f35dd
 
 Package: data.table
 Source: CRAN
-Version: 1.12.6
-Hash: 4fbfebe60de9b5c065ba21f37c68e544
+Version: 1.12.8
+Hash: 283ad0e503ab521300c6d1d02e58d2ae
 
 Package: desc
 Source: CRAN
@@ -265,7 +265,7 @@ Package: pkgbuild
 Source: CRAN
 Version: 1.0.6
 Hash: f41de345bf0dda984cce64a7ea668ea4
-Requires: R6, crayon, withr, rprojroot, cli, prettyunits, desc, callr
+Requires: R6, callr, cli, crayon, desc, prettyunits, rprojroot, withr
 
 Package: pkgconfig
 Source: CRAN
@@ -276,7 +276,7 @@ Package: pkgload
 Source: CRAN
 Version: 1.0.2
 Hash: 41eb2db35be61f6f9e8864cf87a1ecb0
-Requires: rlang, rstudioapi, withr, rprojroot, desc, pkgbuild
+Requires: desc, pkgbuild, rlang, rprojroot, rstudioapi, withr
 
 Package: plogr
 Source: CRAN
@@ -430,7 +430,7 @@ Source: CRAN
 Version: 2.0.1
 Hash: 777eb6e94f5a62bf6320fecf0175bbbb
 Requires: R6, crayon, digest, evaluate, magrittr, praise, rlang, withr,
-    cli, ellipsis, pkgload
+    cli
 
 Package: tibble
 Source: CRAN
