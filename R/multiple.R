@@ -30,7 +30,8 @@
                       multiple = TRUE,
                       selectize = TRUE),
           actionButton(ns('apply'), 'Apply'),
-          downloadButton(ns("download_data"), "Download")
+          downloadButton(ns("download_data"), "Download"),
+          actionButton(ns("reset"), "Reset", icon("refresh"))
         )
       ),
 
@@ -331,5 +332,11 @@
   output$uploaded <- reactive(original_data$initialised)
   outputOptions(output, "uploaded", suspendWhenHidden = FALSE)
   
-
+  # when the 'reset' button is clicked
+  observeEvent(input$reset, {
+    original_data$df <- NULL
+    original_data$offset <- 0
+    original_data$initialised <- FALSE
+    uploaded <- FALSE
+  })
 }
