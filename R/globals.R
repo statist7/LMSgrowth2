@@ -36,7 +36,10 @@ source('R/functions.R', local = TRUE)
   # growthReferenceSexes (string)
   #     - the list of sexes available in currently selected growth reference
   globalValues <- reactiveValues(roundToDigits = 2,
-                                 roundToSignificantDigits = 3)
+                                 roundToSignificantDigits = 3,
+                                 # Use the same default as `ncentiles` and
+                                 # `centilestep` in `centile.R`.
+                                 z_scores = .get_sds_range(7, 0.666))
 
   # this block only executed once on page load to apply saved cookie state, if any
   observe({

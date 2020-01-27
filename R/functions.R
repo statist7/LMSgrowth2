@@ -80,6 +80,13 @@
   
 }
 
+# Function to generate equally spaced SDSs, centred around 0, given their
+# number and the step.
+.get_sds_range <- function(ncentiles, step) {
+  bound <- (as.integer(ncentiles) - 1) / 2
+  (-bound):bound * step
+}
+
 .get_sds <- function(lms_stats) {
   lms_stats$z
 }

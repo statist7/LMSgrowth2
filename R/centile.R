@@ -30,6 +30,7 @@
                      inline = FALSE),
         conditionalPanel(
           condition = "input['centile-customcentiles'] == 'FALSE'",
+          # Use the same default values as `globalValues$z_scores`.
           numericInput(ns("ncentiles"), label =  h5("Number of centiles"),
                        value = 7, min = 1, max = 30),
           numericInput(ns("centilestep"), label = h5("Space between centiles"),
@@ -87,19 +88,6 @@
   # smoother curve
   plot_data <- reactiveValues(f = NULL, m = NULL, ages = NULL)
 
-  # Function to generate equally spaced SDSs, centred around 0, given their
-  # number and the step.
-  get_sds_range <- function(ncentiles, step) {
-    validate(
-      need(is.finite(ncentiles) && ncentiles >= 1,
-           "Please enter a value equal to or larger than 1 for the number of centiles"),
-      need(is.finite(step) && step > 0,
-           "Please enter a positive value for the space between centiles")
-    )
-    bound <- (as.integer(ncentiles) - 1) / 2
-    (-bound):bound * step
-  }
-
   get_measurement_description <- function() {
     measurements <- globals$growthReferenceMeasures
     current_measurement_index <-
@@ -138,9 +126,9 @@
       if (sex %in% input$sex) {
         if (input$customcentiles) {
           if (input$centiles_or_sds == "use_sds") {
-            zs <- as.numeric(unlist(strsplit(input$sds, " ")))
+            globals$z_scores <- as.numeric(unlist(strsplit(input$sds, " ")))
             validate(
-              need(length(zs) > 0, "Please insert a list SDSs")
+              need(length(globals$zs) > 0, "Please insert a list SDSs")
             )
           } else if (input$centiles_or_sds == "use_centiles") {
             values <- as.numeric(unlist(strsplit(input$centiles, " ")))
@@ -149,10 +137,16 @@
               need(all(values >= 0) && all(values <= 100),
                    "Centiles must be between 0 and 100")
             )
-            zs <- qnorm(values / 100)
+            globals$z_scores <- qnorm(values / 100)
           }
         } else {
-          zs <- get_sds_range(input$ncentiles, input$centilestep)
+          validate(
+            need(is.finite(input$ncentiles) && input$ncentiles >= 1,
+                 "Please enter a value equal to or larger than 1 for the number of centiles"),
+            need(is.finite(input$centilestep) && input$centilestep > 0,
+                 "Please enter a positive value for the space between centiles")
+          )
+          globals$z_scores <- .get_sds_range(input$ncentiles, input$centilestep)
         }
         # Input validation.  This only checks the input is a finite value
         validate(
@@ -201,7 +195,7 @@
                     by = .duration_from_unit_to_years(input$agestep,
                                                       input$ageunit))
         # Get the data as a dataframe
-        df <- sitar::LMS2z(ages, as.matrix(zs), sex = sex,
+        df <- sitar::LMS2z(ages, as.matrix(globals$z_scores), sex = sex,
                            measure = input$measure,
                            ref = getExportedValue('sitar',
                                                   globals$growthReference),
@@ -212,7 +206,7 @@
         # When we ask to show the SDS in the header of the table, round them to
         # two digits
         if (input$header_centile_or_sds == "sds") {
-          colnames(df) <- round(zs, digits = globals$roundToDigits)
+          colnames(df) <- round(globals$z_scores, digits = globals$roundToDigits)
         }
         # Add the ages as first column
         ages_to_unit <- .duration_from_years_to_unit(ages, input$ageunit)
@@ -234,7 +228,7 @@
           plot_ages <- seq(agestart_years, agestop_years,
                            length.out = npoints_plot)
           plot_data[[sex]] <- as.data.frame(
-            sitar::LMS2z(plot_ages, as.matrix(zs), sex = sex,
+            sitar::LMS2z(plot_ages, as.matrix(globals$z_scores), sex = sex,
                          measure = input$measure,
                          ref = getExportedValue('sitar',
                                                 globals$growthReference),

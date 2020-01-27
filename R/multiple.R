@@ -16,7 +16,7 @@
         
         conditionalPanel(
           condition = "output['multiple-uploaded'] == true",
-          selectInput(ns("id"),  label = "ID",  choices = c('NOT POPULATED')),
+          selectInput(ns("id_source"),  label = "ID",  choices = c('NOT POPULATED')),
           selectInput(ns("sex"),  label = "Sex",  choices = c('NOT POPULATED')),
           selectInput(ns("age_source"), "Age", c('NOT POPULATED')),
           selectInput(ns("age_unit"), "Unit of age", choices = c('Days', 'Weeks', 'Months', 'Years')),
@@ -97,7 +97,7 @@
       # update ID dropdown
       selected <- get_selected("id", "")
       if (selected != "") {
-        updateSelectInput(session, "id", choices = column_options(),  selected = selected)
+        updateSelectInput(session, "id_source", choices = column_options(),  selected = selected)
         # The ID column may not be stored as a factor, which would make it hard to
         # use it as a filter in the DT table.
         id_column_name <- strsplit(selected, split=" ")[[1]][2]
@@ -175,15 +175,23 @@
     return(sex_column_or_value)
   }
 
-  # returns the age column or value
-  get_age <- function() {
+  # returns the age column
+  get_id <- function() {
       df <- isolate(original_data$df)
-      age_column_or_value <- isolate(input$age_source)
-      age_column = df[, strsplit(age_column_or_value, split=" ")[[1]][[2]]]
-      return(age_column)
+      id_column <- isolate(input$id_source)
+      ids <- df[, strsplit(id_column, split=" ")[[1]][[2]]]
+      return(ids)
   }
 
-  # returns the age column or value in years
+  # returns the age column
+  get_age <- function() {
+      df <- isolate(original_data$df)
+      age_column <- isolate(input$age_source)
+      ages <- df[, strsplit(age_column, split=" ")[[1]][[2]]]
+      return(ages)
+  }
+
+  # returns the age column in years
   get_age_in_years <- function() {
       age_column = get_age()
       age_unit <- stringr::str_to_lower(isolate(input$age_unit))
@@ -243,12 +251,58 @@
   plot_measure <- function(measure, column_name) {
     renderPlotly({
       age_unit <- stringr::str_to_lower(isolate(input$age_unit))
+      ages <- get_age()[input$table_rows_all]
+      ids <- get_id()[input$table_rows_all]
       plt <- plot_ly(type = "scatter", mode = "markers") %>%
         layout(xaxis = list(title = paste0("Age (", age_unit, ")")),
-               yaxis = list(title = paste0(measure$description, " (", measure$unit, ")")),
-               showlegend = FALSE)
-      add_trace(plt, x = get_age()[input$table_rows_all],
-                y = original_data$df[input$table_rows_all,column_name])
+               yaxis = list(title = paste0(measure$description, " (", measure$unit, ")")))
+
+      # Plot centiles if necessary, that is when all selected sexes are equal
+      sexes <- get_sex()
+      if (length(sexes) == 1 || length(unique(sexes[input$table_rows_all])) == 1) {
+        if (length(sexes) == 1) {
+          sex <- sexes
+        } else {
+          sex <- sexes[input$table_rows_all][1]
+        }
+        min_age <- min(ages)
+        max_age <- max(ages)
+        # Do not plot if extrema of ages are not finite, to avoid strange errors
+        # when selecting the sex from the drop-down menu in the sidebar
+        if (is.finite(min_age) && is.finite(max_age)) {
+          # Ages used for plotting centiles.  Take extrema of `ages` and create a
+          # sequence with an arbitrary decent sampling in between.
+          centiles_ages <- seq(min(ages), max(ages), length.out = 200)
+          centiles <- sitar::LMS2z(.duration_from_unit_to_years(centiles_ages, age_unit),
+                                   as.matrix(rev(globals$z_scores)), sex = sex,
+                                   measure = measure$code,
+                                   ref = getExportedValue('sitar',
+                                                          globals$growthReference),
+                                   toz = FALSE)
+          for (col in colnames(centiles)) {
+            this_centile <- centiles[,col]
+            plt <- add_lines(plt, x = centiles_ages, y = this_centile,
+                             type = "scatter", name = col,
+                             opacity = 0.4,
+                             hoverinfo = "name+text",
+                             hovertext = paste0("(",
+                                                signif(centiles_ages,
+                                                       globals$roundToSignificantDigits),
+                                                ", ",
+                                                signif(centiles[,col],
+                                                       globals$roundToSignificantDigits),
+                                                ")")
+                             )
+          }
+        }
+      }
+
+      # Now plot the datapoints from the table
+      plt <- add_trace(plt, x = ages,
+                       y = original_data$df[input$table_rows_all,column_name],
+                       name = ids,
+                       showlegend = FALSE)
+      plt
     })
   }
 
