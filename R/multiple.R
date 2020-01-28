@@ -285,6 +285,7 @@
             plt <- add_lines(plt, x = centiles_ages, y = this_centile,
                              type = "scatter", name = col,
                              opacity = 0.4,
+                             line = list(dash='dash'),
                              hoverinfo = "name+text",
                              hovertext = paste0("(",
                                                 signif(centiles_ages,
