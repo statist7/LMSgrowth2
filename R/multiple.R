@@ -38,6 +38,18 @@
       mainPanel(
         h3(textOutput(ns("growth_ref"))),
         DTOutput(ns("table")),
+        br(),
+        fluidRow(
+          column(12,
+                 wellPanel(
+                   checkboxGroupInput(ns("plot_options"), label = "Plotting options",
+                                      choices = c("Group by ID" = "group_id",
+                                                  "Connect the points" = "connect_points"),
+                                      selected = c("connect_points", "group_id"),
+                                      inline = TRUE)
+                 )),
+          ),
+        br(),
         uiOutput(ns("measurements_plots"))
       )
     )
@@ -253,7 +265,6 @@
     renderPlotly({
       age_unit <- stringr::str_to_lower(isolate(input$age_unit))
       ages <- get_age()[input$table_rows_all]
-      ids <- get_id()[input$table_rows_all]
       plt <- plot_ly(type = "scatter", mode = "markers") %>%
         layout(xaxis = list(title = paste0("Age (", age_unit, ")")),
                yaxis = list(title = paste0(measure$description, " (", measure$unit, ")")))
@@ -299,16 +310,27 @@
         }
       }
 
+      if ("connect_points" %in% input$plot_options) {
+        plot_mode <- "lines+markers"
+      } else {
+        plot_mode <- "markers"
+      }
+      if ("group_id" %in% input$plot_options) {
+        plot_name  <- get_id()[input$table_rows_all]
+      } else {
+        plot_name <- ""
+      }
       # Now plot the datapoints from the table
       plt <- add_trace(plt, x = ages,
                        y = original_data$df[input$table_rows_all,column_name],
-                       name = ids,
+                       name = plot_name,
+                       mode = plot_mode,
                        showlegend = FALSE)
       plt
     })
   }
 
-  output$measurements_plots <- renderUI({
+  plot_all_measures <- function() {
     if (original_data$initialised) {
       plots <- lapply(globals$growthReferenceMeasures,
                       function(measure) {
@@ -321,7 +343,11 @@
                       })
       do.call(tagList, plots)
     }
-  })
+  }
+
+  output$measurements_plots <- renderUI(plot_all_measures())
+  observeEvent(input$plot_options,
+               output$measurements_plots <- renderUI(plot_all_measures()))
 
   output$download_data <- downloadHandler(
     filename = 'lms_download.csv',
