@@ -338,5 +338,6 @@
     original_data$offset <- 0
     original_data$initialised <- FALSE
     uploaded <- FALSE
+    reset("file")
   })
 }
