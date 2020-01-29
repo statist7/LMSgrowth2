@@ -47,8 +47,8 @@
                                                   "Connect the points" = "connect_points"),
                                       selected = c("connect_points", "group_id"),
                                       inline = TRUE)
-                 )),
-          ),
+                 ))
+        ),
         br(),
         uiOutput(ns("measurements_plots"))
       )
