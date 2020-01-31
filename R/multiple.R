@@ -45,7 +45,12 @@
                                choices = c("Group by ID" = "group_id",
                                            "Connect the points" = "connect_points"),
                                selected = c("connect_points", "group_id"),
-                               inline = TRUE)
+                               inline = TRUE),
+            radioButtons(ns("plot_y_axis"), label = "y-axis",
+                         choices = list("Measurement" = "measurement",
+                                        "Centile" = "centile",
+                                        "SDSs" = "sds"),
+                         selected = "measurement", inline = TRUE)
           )
         ),
         br(),
@@ -264,12 +269,31 @@
     renderPlotly({
       age_unit <- stringr::str_to_lower(isolate(input$age_unit))
       ages <- get_age()[input$table_rows_all]
+      sexes <- get_sex()
+
+      if (input$plot_y_axis == "measurement") {
+        y_data <- original_data$df[input$table_rows_all,column_name]
+        y_title <- paste0(measure$description, " (", measure$unit, ")")
+      } else {
+        z <- sitar::LMS2z(.duration_from_unit_to_years(ages, age_unit),
+                          y = original_data$df[input$table_rows_all,column_name],
+                          sex = sexes[input$table_rows_all], measure = measure$code,
+                          ref = getExportedValue('sitar', globals$growthReference))
+        if (input$plot_y_axis == "sds") {
+          y_data <- signif(z, globals$roundToSignificantDigits)
+          y_title <- paste0(measure$description, " (SDS)")
+        } else {
+          np <- abs(z) > qnorm(0.99)
+          y_data <- signif(round(pnorm(z) * 100, np), globals$roundToSignificantDigits)
+          y_title <- paste0(measure$description, " (centile)")
+        }
+      }
+
       plt <- plot_ly(type = "scatter", mode = "markers") %>%
         layout(xaxis = list(title = paste0("Age (", age_unit, ")")),
-               yaxis = list(title = paste0(measure$description, " (", measure$unit, ")")))
+               yaxis = list(title = y_title))
 
       # Plot centiles if necessary, that is when all selected sexes are equal
-      sexes <- get_sex()
       if (length(sexes) == 1 || length(unique(sexes[input$table_rows_all])) == 1) {
         if (length(sexes) == 1) {
           sex <- sexes
@@ -280,7 +304,7 @@
         max_age <- max(ages)
         # Do not plot if extrema of ages are not finite, to avoid strange errors
         # when selecting the sex from the drop-down menu in the sidebar
-        if (is.finite(min_age) && is.finite(max_age)) {
+        if (input$plot_y_axis == "measurement" &&  is.finite(min_age) && is.finite(max_age)) {
           # Ages used for plotting centiles.  Take extrema of `ages` and create a
           # sequence with an arbitrary decent sampling in between.
           centiles_ages <- seq(min(ages), max(ages), length.out = 200)
@@ -321,7 +345,7 @@
       }
       # Now plot the datapoints from the table
       plt <- add_trace(plt, x = ages,
-                       y = original_data$df[input$table_rows_all,column_name],
+                       y = y_data,
                        name = plot_name,
                        mode = plot_mode,
                        showlegend = FALSE)
