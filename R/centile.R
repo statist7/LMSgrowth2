@@ -128,7 +128,7 @@
           if (input$centiles_or_sds == "use_sds") {
             globals$z_scores <- as.numeric(unlist(strsplit(input$sds, " ")))
             validate(
-              need(length(globals$zs) > 0, "Please insert a list SDSs")
+              need(length(globals$z_scores) > 0, "Please insert a list SDSs")
             )
           } else if (input$centiles_or_sds == "use_centiles") {
             values <- as.numeric(unlist(strsplit(input$centiles, " ")))
@@ -227,12 +227,21 @@
         } else {
           plot_ages <- seq(agestart_years, agestop_years,
                            length.out = npoints_plot)
-          plot_data[[sex]] <- as.data.frame(
+          # Save data in a temporary data frame to avoid modifying
+          # `plot_data[[sex]]` multiple times, which seems to trigger an
+          # infinite loop.
+          tmp_data <- as.data.frame(
             sitar::LMS2z(plot_ages, as.matrix(globals$z_scores), sex = sex,
                          measure = input$measure,
                          ref = getExportedValue('sitar',
                                                 globals$growthReference),
                          toz = FALSE))
+          # We need to always have the same column names for `output_data` and
+          # `plot_data`
+          data_columns <- colnames(output_data[[sex]])
+          colnames(tmp_data) <- data_columns[2:length(data_columns)]
+          # Save the temporary data frame into `plot_data[[sex]]`
+          plot_data[[sex]] <- tmp_data
           plot_data$ages <- .duration_from_years_to_unit(plot_ages, input$ageunit)
         }
         # Finally return the dataframe

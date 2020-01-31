@@ -40,14 +40,13 @@
         DTOutput(ns("table")),
         br(),
         fluidRow(
-          column(12,
-                 wellPanel(
-                   checkboxGroupInput(ns("plot_options"), label = "Plotting options",
-                                      choices = c("Group by ID" = "group_id",
-                                                  "Connect the points" = "connect_points"),
-                                      selected = c("connect_points", "group_id"),
-                                      inline = TRUE)
-                 ))
+          wellPanel(
+            checkboxGroupInput(ns("plot_options"), label = "Plotting options",
+                               choices = c("Group by ID" = "group_id",
+                                           "Connect the points" = "connect_points"),
+                               selected = c("connect_points", "group_id"),
+                               inline = TRUE)
+          )
         ),
         br(),
         uiOutput(ns("measurements_plots"))
