@@ -283,8 +283,7 @@
           y_data <- signif(z, globals$roundToSignificantDigits)
           y_title <- paste0(measure$description, " (SDS)")
         } else {
-          np <- abs(z) > qnorm(0.99)
-          y_data <- signif(round(pnorm(z) * 100, np), globals$roundToSignificantDigits)
+          y_data <- signif(.sds_to_centile(z), globals$roundToSignificantDigits)
           y_title <- paste0(measure$description, " (centile)")
         }
       }

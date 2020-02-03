@@ -181,3 +181,10 @@
   output <- paste(output, collapse = "    \n")
   output
 }
+
+#' returns the numerical value of centile from the given z-score.  Taken from
+#' `sitar::z2cent`.
+.sds_to_centile <- function(z) {
+  np <- abs(z) > qnorm(0.99)
+  round(pnorm(z) * 100, np)
+}
