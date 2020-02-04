@@ -54,7 +54,7 @@
           )
         ),
         br(),
-        uiOutput(ns("measurements_plots"))
+        plotlyOutput(ns("measurements_plots"))
       )
     )
   )
@@ -266,110 +266,118 @@
   }
 
   plot_measure <- function(measure, column_name) {
-    renderPlotly({
-      age_unit <- stringr::str_to_lower(isolate(input$age_unit))
-      ages <- get_age()[input$table_rows_all]
-      sexes <- get_sex()
+    age_unit <- stringr::str_to_lower(isolate(input$age_unit))
+    ages <- get_age()[input$table_rows_all]
+    sexes <- get_sex()
 
-      if (input$plot_y_axis == "measurement") {
-        y_data <- original_data$df[input$table_rows_all,column_name]
-        y_title <- paste0(measure$description, " (", measure$unit, ")")
+    if (input$plot_y_axis == "measurement") {
+      y_data <- original_data$df[input$table_rows_all,column_name]
+      y_title <- paste0(measure$description, " (", measure$unit, ")")
+    } else {
+      z <- sitar::LMS2z(.duration_from_unit_to_years(ages, age_unit),
+                        y = original_data$df[input$table_rows_all,column_name],
+                        sex = sexes[input$table_rows_all], measure = measure$code,
+                        ref = getExportedValue('sitar', globals$growthReference))
+      if (input$plot_y_axis == "sds") {
+        y_data <- signif(z, globals$roundToSignificantDigits)
+        y_title <- paste0(measure$description, " (SDS)")
       } else {
-        z <- sitar::LMS2z(.duration_from_unit_to_years(ages, age_unit),
-                          y = original_data$df[input$table_rows_all,column_name],
-                          sex = sexes[input$table_rows_all], measure = measure$code,
-                          ref = getExportedValue('sitar', globals$growthReference))
-        if (input$plot_y_axis == "sds") {
-          y_data <- signif(z, globals$roundToSignificantDigits)
-          y_title <- paste0(measure$description, " (SDS)")
-        } else {
-          y_data <- signif(.sds_to_centile(z), globals$roundToSignificantDigits)
-          y_title <- paste0(measure$description, " (centile)")
+        y_data <- signif(.sds_to_centile(z), globals$roundToSignificantDigits)
+        y_title <- paste0(measure$description, " (centile)")
+      }
+    }
+
+    plt <- plot_ly(type = "scatter", mode = "markers") %>%
+      layout(xaxis = list(title = paste0("Age (", age_unit, ")")),
+             yaxis = list(title = y_title))
+
+    # Plot centiles if necessary, that is when all selected sexes are equal
+    if (length(sexes) == 1 || length(unique(sexes[input$table_rows_all])) == 1) {
+      if (length(sexes) == 1) {
+        sex <- sexes
+      } else {
+        sex <- sexes[input$table_rows_all][1]
+      }
+      min_age <- min(ages)
+      max_age <- max(ages)
+      # Do not plot if extrema of ages are not finite, to avoid strange errors
+      # when selecting the sex from the drop-down menu in the sidebar
+      if (input$plot_y_axis == "measurement" &&  is.finite(min_age) && is.finite(max_age)) {
+        # Ages used for plotting centiles.  Take extrema of `ages` and create a
+        # sequence with an arbitrary decent sampling in between.
+        centiles_ages <- seq(min(ages), max(ages), length.out = 200)
+        centiles <- sitar::LMS2z(.duration_from_unit_to_years(centiles_ages, age_unit),
+                                 as.matrix(rev(globals$z_scores)), sex = sex,
+                                 measure = measure$code,
+                                 ref = getExportedValue('sitar',
+                                                        globals$growthReference),
+                                 toz = FALSE)
+        for (col in colnames(centiles)) {
+          this_centile <- centiles[,col]
+          plt <- add_lines(plt, x = centiles_ages, y = this_centile,
+                           type = "scatter", name = col,
+                           opacity = 0.4,
+                           line = list(dash='dash'),
+                           hoverinfo = "name+text",
+                           hovertext = paste0("(",
+                                              signif(centiles_ages,
+                                                     globals$roundToSignificantDigits),
+                                              ", ",
+                                              signif(centiles[,col],
+                                                     globals$roundToSignificantDigits),
+                                              ")")
+                           )
         }
       }
+    }
 
-      plt <- plot_ly(type = "scatter", mode = "markers") %>%
-        layout(xaxis = list(title = paste0("Age (", age_unit, ")")),
-               yaxis = list(title = y_title))
-
-      # Plot centiles if necessary, that is when all selected sexes are equal
-      if (length(sexes) == 1 || length(unique(sexes[input$table_rows_all])) == 1) {
-        if (length(sexes) == 1) {
-          sex <- sexes
-        } else {
-          sex <- sexes[input$table_rows_all][1]
-        }
-        min_age <- min(ages)
-        max_age <- max(ages)
-        # Do not plot if extrema of ages are not finite, to avoid strange errors
-        # when selecting the sex from the drop-down menu in the sidebar
-        if (input$plot_y_axis == "measurement" &&  is.finite(min_age) && is.finite(max_age)) {
-          # Ages used for plotting centiles.  Take extrema of `ages` and create a
-          # sequence with an arbitrary decent sampling in between.
-          centiles_ages <- seq(min(ages), max(ages), length.out = 200)
-          centiles <- sitar::LMS2z(.duration_from_unit_to_years(centiles_ages, age_unit),
-                                   as.matrix(rev(globals$z_scores)), sex = sex,
-                                   measure = measure$code,
-                                   ref = getExportedValue('sitar',
-                                                          globals$growthReference),
-                                   toz = FALSE)
-          for (col in colnames(centiles)) {
-            this_centile <- centiles[,col]
-            plt <- add_lines(plt, x = centiles_ages, y = this_centile,
-                             type = "scatter", name = col,
-                             opacity = 0.4,
-                             line = list(dash='dash'),
-                             hoverinfo = "name+text",
-                             hovertext = paste0("(",
-                                                signif(centiles_ages,
-                                                       globals$roundToSignificantDigits),
-                                                ", ",
-                                                signif(centiles[,col],
-                                                       globals$roundToSignificantDigits),
-                                                ")")
-                             )
-          }
-        }
-      }
-
-      if ("connect_points" %in% input$plot_options) {
-        plot_mode <- "lines+markers"
-      } else {
-        plot_mode <- "markers"
-      }
-      if ("group_id" %in% input$plot_options) {
-        plot_name  <- get_id()[input$table_rows_all]
-      } else {
-        plot_name <- ""
-      }
-      # Now plot the datapoints from the table
-      plt <- add_trace(plt, x = ages,
-                       y = y_data,
-                       name = plot_name,
-                       mode = plot_mode,
-                       showlegend = FALSE)
-      plt
-    })
+    if ("connect_points" %in% input$plot_options) {
+      plot_mode <- "lines+markers"
+    } else {
+      plot_mode <- "markers"
+    }
+    if ("group_id" %in% input$plot_options) {
+      plot_name  <- get_id()[input$table_rows_all]
+    } else {
+      plot_name <- ""
+    }
+    # Now plot the datapoints from the table
+    plt <- add_trace(plt, x = ages,
+                     y = y_data,
+                     name = plot_name,
+                     mode = plot_mode,
+                     showlegend = FALSE)
+    plt
   }
 
   plot_all_measures <- function() {
-    if (original_data$initialised) {
-      plots <- lapply(globals$growthReferenceMeasures,
-                      function(measure) {
-                        value <- input[[measure$code]]
-                        if (!is.null(value) && value != 'N/A') {
-                          column_name <- sub("\\[Column\\] ", "", value)
-                          output[[paste0("plot_", measure$code)]] <- plot_measure(measure, column_name)
-                          plotlyOutput(ns(paste0("plot_", measure$code)))
-                        }
-                      })
-      do.call(tagList, plots)
-    }
+    renderPlotly({
+      if (original_data$initialised) {
+        plots <- lapply(globals$growthReferenceMeasures,
+                        function(measure) {
+                          value <- input[[measure$code]]
+                            if (!is.null(value) && value != 'N/A') {
+                              column_name <- sub("\\[Column\\] ", "", value)
+                              plot_measure(measure, column_name)
+                            }
+                        })
+        subplts <- Filter(Negate(is.null), plots)
+        subplts_number <- length(subplts)
+        # Plot only if there is something to plot
+        if (subplts_number >= 1) {
+          subplot(subplts, nrows = subplts_number, shareX = TRUE, titleY = TRUE) %>%
+            # This causes a warning to be issued, but this is really a bug in
+            # plotly that doesn't allow to set the size of a subplot in a sane
+            # way: https://github.com/ropensci/plotly/issues/1613
+            layout(autosize = TRUE, height = subplts_number * 400)
+        }
+      }
+    })
   }
 
-  output$measurements_plots <- renderUI(plot_all_measures())
+  output$measurements_plots <- plot_all_measures()
   observeEvent(input$plot_options,
-               output$measurements_plots <- renderUI(plot_all_measures()))
+               output$measurements_plots <- plot_all_measures())
 
   output$download_data <- downloadHandler(
     filename = 'lms_download.csv',
