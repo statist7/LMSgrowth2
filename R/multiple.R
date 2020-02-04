@@ -265,7 +265,7 @@
       return(new_columns)
   }
 
-  plot_measure <- function(measure, column_name) {
+  plot_measure <- function(measure, column_name, show_legend) {
     age_unit <- stringr::str_to_lower(isolate(input$age_unit))
     ages <- get_age()[input$table_rows_all]
     sexes <- get_sex()
@@ -312,10 +312,17 @@
                                  ref = getExportedValue('sitar',
                                                         globals$growthReference),
                                  toz = FALSE)
+        pallette <- brewer.pal(length(colnames(centiles)), "Dark2")
+        idx <- 0
         for (col in colnames(centiles)) {
           this_centile <- centiles[,col]
+          idx <- idx + 1
           plt <- add_lines(plt, x = centiles_ages, y = this_centile,
-                           type = "scatter", name = col,
+                           type = "scatter",
+                           name = col,
+                           legendgroup = col,
+                           color = pallette[idx],
+                           showlegend = show_legend,
                            opacity = 0.4,
                            line = list(dash='dash'),
                            hoverinfo = "name+text",
@@ -353,23 +360,25 @@
   plot_all_measures <- function() {
     renderPlotly({
       if (original_data$initialised) {
-        plots <- lapply(globals$growthReferenceMeasures,
+        to_plot <- sapply(globals$growthReferenceMeasures,
+                          function(measure) {
+                            value <- input[[measure$code]]
+                            !is.null(value) && value != 'N/A'
+                          })
+        first_code <- globals$growthReferenceMeasures[to_plot][1][[1]]$code
+        plots <- lapply(globals$growthReferenceMeasures[to_plot],
                         function(measure) {
-                          value <- input[[measure$code]]
-                            if (!is.null(value) && value != 'N/A') {
-                              column_name <- sub("\\[Column\\] ", "", value)
-                              plot_measure(measure, column_name)
-                            }
+                          column_name <- sub("\\[Column\\] ", "", input[[measure$code]])
+                          plot_measure(measure, column_name, measure$code == first_code)
                         })
-        subplts <- Filter(Negate(is.null), plots)
-        subplts_number <- length(subplts)
+        plots_number <- length(plots)
         # Plot only if there is something to plot
-        if (subplts_number >= 1) {
-          subplot(subplts, nrows = subplts_number, shareX = TRUE, titleY = TRUE) %>%
+        if (plots_number >= 1) {
+          subplot(plots, nrows = plots_number, shareX = TRUE, titleY = TRUE) %>%
             # This causes a warning to be issued, but this is really a bug in
             # plotly that doesn't allow to set the size of a subplot in a sane
             # way: https://github.com/ropensci/plotly/issues/1613
-            layout(autosize = TRUE, height = subplts_number * 400)
+            layout(autosize = TRUE, height = plots_number * 400)
         }
       }
     })
