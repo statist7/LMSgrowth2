@@ -217,7 +217,7 @@ source("R/functions.R", local = TRUE)
                 } else {
                   age <- age_in_years()
                 }
-                lms_stats <- .measurement_to_scores(age, input$sex, input_name, input[[input_name]], globals$growthReference)
+                lms_stats <- .measurement_to_scores(age, input$sex, input_name, input[[input_name]], globals$growthReferenceData)
                 update_mc('sds', .get_sds(lms_stats))
                 update_mc('centile', .get_centile(lms_stats))
                 update_mc('pred', .get_predicted(lms_stats))

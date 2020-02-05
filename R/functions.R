@@ -68,13 +68,12 @@
 
 #' returns the SDS and L M & S values for a given measurement 
 .measurement_to_scores <- function(age_y, sex, measure, value, ref) {
-  selected_ref <- getExportedValue('sitar', ref)
   column_name <- paste('L.', measure, sep='')
-  if (!(column_name %in% names(selected_ref))) {
+  if (!(column_name %in% names(ref))) {
     return(NULL)
   }
 
-  z <- sitar::LMS2z(age_y, value, sex, measure=measure, ref=selected_ref, LMStable = TRUE)
+  z <- sitar::LMS2z(age_y, value, sex, measure=measure, ref=ref, LMStable = TRUE)
   lmstable <- attr(z, "LMStable")
   list(z=z, L=lmstable$L, M=lmstable$M, S=lmstable$S, value=value, measure=measure)  
   
