@@ -49,7 +49,7 @@
             radioButtons(ns("plot_y_axis"), label = "y-axis",
                          choices = list("Measurement" = "measurement",
                                         "Centile" = "centile",
-                                        "SDSs" = "sds"),
+                                        "SDS" = "sds"),
                          selected = "measurement", inline = TRUE)
           )
         ),
@@ -312,18 +312,14 @@
                                  ref = getExportedValue('sitar',
                                                         globals$growthReference),
                                  toz = FALSE)
-        pallette <- brewer.pal(length(colnames(centiles)), "Dark2")
-        idx <- 0
         for (col in colnames(centiles)) {
           this_centile <- centiles[,col]
-          idx <- idx + 1
           plt <- add_lines(plt, x = centiles_ages, y = this_centile,
                            type = "scatter",
-                           name = col,
+                           color = col,
                            legendgroup = col,
-                           color = pallette[idx],
                            showlegend = show_legend,
-                           opacity = 0.4,
+                           opacity = 0.6,
                            line = list(dash='dash'),
                            hoverinfo = "name+text",
                            hovertext = paste0("(",
@@ -344,14 +340,16 @@
       plot_mode <- "markers"
     }
     if ("group_id" %in% input$plot_options) {
-      plot_name  <- get_id()[input$table_rows_all]
+      # We need to convert to a plain vector because the `color` option below
+      # doesn't play nicely with a factor
+      plot_name  <- as.vector(get_id()[input$table_rows_all])
     } else {
       plot_name <- ""
     }
     # Now plot the datapoints from the table
     plt <- add_trace(plt, x = ages,
                      y = y_data,
-                     name = plot_name,
+                     color = plot_name,
                      mode = plot_mode,
                      showlegend = FALSE)
     plt
