@@ -255,12 +255,7 @@ source("R/functions.R", local = TRUE)
       range <- c(floor(min(df$SDS)) - 1, ceiling(max(df$SDS)) + 1)
       tickvals <- seq(range[1], range[2])
     } else {
-      measurement_y <- df$Centile
-      # there might be some which are SDS, fix those entries to 100th or 0th centile
-      measurement_y[stringr::str_detect(df$Centile, 'SDS\\+')] <- "100th"
-      measurement_y[stringr::str_detect(df$Centile, 'SDS\\-')] <- "0th"
-      # get rid of letters in centile for co-ordinates
-      measurement_y <- as.numeric(stringr::str_replace_all(measurement_y, "([A-z])", ""))
+      measurement_y <- .sds_to_centile(df$SDS)
       range <- c(-2, 102)
       tickvals <- default_centiles
     }

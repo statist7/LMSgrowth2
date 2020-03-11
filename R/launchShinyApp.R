@@ -6,6 +6,7 @@ library(stringr)
 library(plotly)
 library(DT)
 library(formattable)
+library(RColorBrewer)
 
 source('R/calculator.R', local=TRUE)
 source('R/example.R', local=TRUE)

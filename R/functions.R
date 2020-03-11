@@ -79,6 +79,13 @@
   
 }
 
+# Function to generate equally spaced SDSs, centred around 0, given their
+# number and the step.
+.get_sds_range <- function(ncentiles, step) {
+  bound <- (as.integer(ncentiles) - 1) / 2
+  (-bound):bound * step
+}
+
 .get_sds <- function(lms_stats) {
   lms_stats$z
 }
@@ -172,4 +179,11 @@
   output <- paste(c(title, output))
   output <- paste(output, collapse = "    \n")
   output
+}
+
+#' returns the numerical value of centile from the given z-score.  Taken from
+#' `sitar::z2cent`.
+.sds_to_centile <- function(z) {
+  np <- abs(z) > qnorm(0.99)
+  round(pnorm(z) * 100, np)
 }

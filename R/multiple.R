@@ -16,6 +16,7 @@
         
         conditionalPanel(
           condition = "output['multiple-uploaded'] == true",
+          selectInput(ns("id_source"),  label = "ID",  choices = c('NOT POPULATED')),
           selectInput(ns("sex"),  label = "Sex",  choices = c('NOT POPULATED')),
           selectInput(ns("age_source"), "Age", c('NOT POPULATED')),
           selectInput(ns("age_unit"), "Unit of age", choices = c('Days', 'Weeks', 'Months', 'Years')),
@@ -29,13 +30,31 @@
                       multiple = TRUE,
                       selectize = TRUE),
           actionButton(ns('apply'), 'Apply'),
-          downloadButton(ns("download_data"), "Download")
+          downloadButton(ns("download_data"), "Download"),
+          actionButton(ns("reset"), "Reset", icon("refresh"))
         )
       ),
 
       mainPanel(
         h3(textOutput(ns("growth_ref"))),
-        DTOutput(ns("table"))
+        DTOutput(ns("table")),
+        br(),
+        fluidRow(
+          wellPanel(
+            checkboxGroupInput(ns("plot_options"), label = "Plotting options",
+                               choices = c("Group by ID" = "group_id",
+                                           "Connect the points" = "connect_points"),
+                               selected = c("connect_points", "group_id"),
+                               inline = TRUE),
+            radioButtons(ns("plot_y_axis"), label = "y-axis",
+                         choices = list("Measurement" = "measurement",
+                                        "Centile" = "centile",
+                                        "SDS" = "sds"),
+                         selected = "measurement", inline = TRUE)
+          )
+        ),
+        br(),
+        plotlyOutput(ns("measurements_plots"))
       )
     )
   )
@@ -92,15 +111,28 @@
       original_data$initialised = TRUE
       uploaded = TRUE
 
+      # update ID dropdown
+      selected <- get_selected("id", "")
+      if (selected != "") {
+        updateSelectInput(session, "id_source", choices = column_options(),  selected = selected)
+        # The ID column may not be stored as a factor, which would make it hard to
+        # use it as a filter in the DT table.
+        id_column_name <- strsplit(selected, split=" ")[[1]][2]
+        original_data$df[[id_column_name]] <- as.factor(original_data$df[[id_column_name]])
+      }
+
       # update sex dropdown
       selected <- get_selected("sex", 'Male')
-      choices <-  c('Male', 'Female', column_options())
-      updateSelectInput(session, 'sex', choices = choices,  selected = selected)
-      
+      if (selected != "") {
+        choices <-  c('Male', 'Female', column_options())
+        updateSelectInput(session, 'sex', choices = choices,  selected = selected)
+      }
+
       # update age
       selected <- get_selected("age", '')
-      updateSelectInput(session, 'age_source', choices = column_options(), selected = selected)
-      selected <- get_selected("age", 'Days')
+      if (selected != "") {
+        updateSelectInput(session, 'age_source', choices = column_options(), selected = selected)
+      }
     }
   })
 
@@ -116,6 +148,8 @@
   get_selected <- function(code, default) {
     if (code == "age") {
       to_match = '[Aa]ge|[Yy]ears|[Dd]ays|[Ww]eeks'
+    } else if (code == "id") {
+      to_match = '[Ii][Dd]'
     } else if (code == "sex") {
       to_match = '[Ss]ex|[Gg]ender'
     } else if (code == "ht") {
@@ -158,13 +192,26 @@
     return(sex_column_or_value)
   }
 
-  # returns the age column or value
+  # returns the age column
+  get_id <- function() {
+      df <- isolate(original_data$df)
+      id_column <- isolate(input$id_source)
+      ids <- df[, strsplit(id_column, split=" ")[[1]][[2]]]
+      return(ids)
+  }
+
+  # returns the age column
   get_age <- function() {
       df <- isolate(original_data$df)
-      age_column_or_value <- isolate(input$age_source)
-      age_unit <- stringr::str_to_lower(isolate(input$age_unit))
+      age_column <- isolate(input$age_source)
+      ages <- df[, strsplit(age_column, split=" ")[[1]][[2]]]
+      return(ages)
+  }
 
-      age_column = df[, strsplit(age_column_or_value, split=" ")[[1]][[2]]]
+  # returns the age column in years
+  get_age_in_years <- function() {
+      age_column = get_age()
+      age_unit <- stringr::str_to_lower(isolate(input$age_unit))
 
       # transform age into years if necessary
       if (age_unit != 'years') {
@@ -186,9 +233,17 @@
     list(name='Skewness', column_name='Skewness', func=.get_skewness)
   )
 
+  valid_sexes <- function(sexes) {
+    # LMS2z checks the first letter of the sex
+    letter <- substr(sexes, 1, 1)
+    (all(letter %in% c(1, 2))) ||
+      (all(letter %in% c("M", "F"))) ||
+      (all(letter %in% c("B", "G"))) ||
+      (all(letter %in% c("T", "F")))
+  }
+
   do_calculation_for_measurement <- function(measurement, df, new_columns) {
       value <- input[[measurement$code]]
-      input_name <- measurement$description
       code_name <- measurement$code
       if (!is.null(value) && value != 'N/A') {
         # a function that returns column name for a given statistics
@@ -197,9 +252,9 @@
         }
         column = strsplit(value, split=" ")[[1]][2]
         sex_column_or_value <- get_sex()
-        age_column_or_value <- get_age()
+        age_column_or_value <- get_age_in_years()
 
-        lms_stats <- .measurement_to_scores(age_column_or_value, sex_column_or_value, code_name, df[, column], ref=globals$growthReference)
+        lms_stats <- .measurement_to_scores(age_column_or_value, sex_column_or_value, code_name, df[, column], ref=globals$growthReferenceData)
 
         # loop through each of the possible statistics and calculate if necessary
         for (calc in calculations) {
@@ -213,11 +268,136 @@
               new_columns[[new_col(calc$column_name, column, code_name)]] <- result
             }
         }
-
       }
 
       return(new_columns)
   }
+
+  plot_measure <- function(measure, column_name, show_centile_legend) {
+    age_unit <- stringr::str_to_lower(isolate(input$age_unit))
+    ages <- get_age()[input$table_rows_all]
+    sexes <- get_sex()
+
+    if (input$plot_y_axis == "measurement") {
+      y_data <- original_data$df[input$table_rows_all,column_name]
+      y_title <- paste0(measure$description, " (", measure$unit, ")")
+    } else {
+      z <- sitar::LMS2z(.duration_from_unit_to_years(ages, age_unit),
+                        y = original_data$df[input$table_rows_all,column_name],
+                        sex = sexes[input$table_rows_all], measure = measure$code,
+                        ref = globals$growthReferenceData)
+      if (input$plot_y_axis == "sds") {
+        y_data <- signif(z, globals$roundToSignificantDigits)
+        y_title <- paste0(measure$description, " (SDS)")
+      } else {
+        y_data <- signif(.sds_to_centile(z), globals$roundToSignificantDigits)
+        y_title <- paste0(measure$description, " (centile)")
+      }
+    }
+
+
+    if ("connect_points" %in% input$plot_options) {
+      plot_mode <- "lines+markers"
+    } else {
+      plot_mode <- "markers"
+    }
+    if ("group_id" %in% input$plot_options) {
+      # We need to convert to a plain vector because the `color` option below
+      # doesn't play nicely with a factor
+      plot_name  <- as.vector(get_id()[input$table_rows_all])
+    } else {
+      plot_name <- ""
+    }
+
+    plt <- plot_ly(type = "scatter", x = ages, y = y_data,
+                   color = plot_name,
+                   colors = "Dark2",
+                   mode = plot_mode,
+                   showlegend = FALSE) %>%
+      layout(xaxis = list(title = paste0("Age (", age_unit, ")")),
+             yaxis = list(title = y_title))
+
+    # Plot centiles if necessary, that is when all selected sexes are equal
+    if (length(sexes) == 1 || length(unique(sexes[input$table_rows_all])) == 1) {
+      if (length(sexes) == 1) {
+        sex <- sexes
+      } else {
+        sex <- sexes[input$table_rows_all][1]
+      }
+      min_age <- min(ages)
+      max_age <- max(ages)
+      # Do not plot if extrema of ages are not finite, to avoid strange errors
+      # when selecting the sex from the drop-down menu in the sidebar
+      if (input$plot_y_axis == "measurement" &&  is.finite(min_age) && is.finite(max_age)) {
+        # Ages used for plotting centiles.  Take extrema of `ages` and create a
+        # sequence with an arbitrary decent sampling in between.
+        centiles_ages <- seq(min(ages), max(ages), length.out = 200)
+        centiles <- sitar::LMS2z(.duration_from_unit_to_years(centiles_ages, age_unit),
+                                 as.matrix(rev(globals$z_scores)), sex = sex,
+                                 measure = measure$code,
+                                 ref = globals$growthReferenceData,
+                                 toz = FALSE)
+        for (col in colnames(centiles)) {
+          this_centile <- centiles[,col]
+          plt <- add_lines(plt, x = centiles_ages, y = this_centile,
+                           type = "scatter",
+                           color = col,
+                           legendgroup = col,
+                           showlegend = show_centile_legend,
+                           opacity = 0.6,
+                           line = list(dash='dash'),
+                           hoverinfo = "name+text",
+                           hovertext = paste0("(",
+                                              signif(centiles_ages,
+                                                     globals$roundToSignificantDigits),
+                                              ", ",
+                                              signif(centiles[,col],
+                                                     globals$roundToSignificantDigits),
+                                              ")"),
+                           showlegend = TRUE
+                           )
+        }
+      }
+    }
+    # Now plot the datapoints from the table
+    plt
+  }
+
+  plot_all_measures <- function() {
+    renderPlotly({
+      if (original_data$initialised) {
+        # We first filter the known measurements to find which ones are present
+        # in the current data.
+        to_plot <- sapply(globals$growthReferenceMeasures,
+                          function(measure) {
+                            value <- input[[measure$code]]
+                            !is.null(value) && value != 'N/A'
+                          })
+        # Get the code of the first measurement to plot
+        first_code <- globals$growthReferenceMeasures[to_plot][1][[1]]$code
+        # Create all the plots
+        plots <- lapply(globals$growthReferenceMeasures[to_plot],
+                        function(measure) {
+                          column_name <- sub("\\[Column\\] ", "", input[[measure$code]])
+                          plot_measure(measure, column_name, measure$code == first_code)
+                        })
+        plots_number <- length(plots)
+        # Plot only if there is something to plot
+        if (plots_number >= 1) {
+          # Plot them together with `subplot`
+          subplot(plots, nrows = plots_number, shareX = TRUE, titleY = TRUE) %>%
+            # This causes a warning to be issued, but this is really a bug in
+            # plotly that doesn't allow to set the size of a subplot in a sane
+            # way: https://github.com/ropensci/plotly/issues/1613
+            layout(autosize = TRUE, height = plots_number * 400)
+        }
+      }
+    })
+  }
+
+  output$measurements_plots <- plot_all_measures()
+  observeEvent(input$plot_options,
+               output$measurements_plots <- plot_all_measures())
 
   output$download_data <- downloadHandler(
     filename = 'lms_download.csv',
@@ -229,5 +409,12 @@
   output$uploaded <- reactive(original_data$initialised)
   outputOptions(output, "uploaded", suspendWhenHidden = FALSE)
   
-
+  # when the 'reset' button is clicked
+  observeEvent(input$reset, {
+    original_data$df <- NULL
+    original_data$offset <- 0
+    original_data$initialised <- FALSE
+    uploaded <- FALSE
+    reset("file")
+  })
 }
