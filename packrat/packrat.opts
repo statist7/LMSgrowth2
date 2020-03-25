@@ -3,10 +3,8 @@ use.cache: FALSE
 print.banner.on.startup: auto
 vcs.ignore.lib: TRUE
 vcs.ignore.src: TRUE
-external.packages: 
+external.packages:
     devtools
-    usethis
-    testthat
 local.repos: 
 load.external.packages.on.startup: TRUE
 ignored.packages: 

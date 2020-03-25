@@ -109,7 +109,7 @@ source('R/functions.R', local = TRUE)
       # if it's a user uploaded growth reference
       if (stringr::str_starts(input$growth_ref, GROWTH_REF_PREFIX)) {
         user_growth_ref <- file.path(USER_UPLOAD_DIR, input$jscookie$uuid, input$growth_ref)
-        growth_ref_data <- read.csv(user_growth_ref)
+        growth_ref_data <- rio::import(user_growth_ref)
         globalValues$growthReferenceName <- stringr::str_replace(input$growth_ref, GROWTH_REF_PREFIX, '')
       } else {
         # it's a sitar growth reference

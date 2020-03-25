@@ -5,7 +5,7 @@
   fluidPage(
     sidebarLayout(
       sidebarPanel(
-        h3("Calculate centiles"),
+        h3("Centiles"),
         selectInput(ns("measure"), label = h4("Measurement"),
                     choices = list(), selected = ""),
         checkboxGroupInput(ns("sex"), label = h4("Sex"),

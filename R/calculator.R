@@ -7,7 +7,7 @@ source("R/functions.R", local = TRUE)
   fluidPage(
     sidebarLayout(
       sidebarPanel(
-        h3("Single date calculator"),
+        h3("One child"),
         radioButtons(ns("sex"), label = h4("Sex"), choices = list("Male" = 1, "Female" = 2),  selected = 1, inline = T),
         radioButtons(ns("age_setting"), choices = list("Age" = "age", "Date" = "dates"), selected = "age", label = h4("Age"), inline=TRUE),
         conditionalPanel(

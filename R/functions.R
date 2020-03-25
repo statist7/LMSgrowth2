@@ -114,8 +114,12 @@
   list(
     # 'Berkeley Child Guidance Study' = 'berkeley',
     'UK 1990 growth reference' = 'uk90',
-    'UK-WHO growth reference (w/ preterm)' = 'ukwhopt',
-    'WHO 2006 growth standard' = 'who06'
+    'UK-WHO growth reference including preterm' = 'ukwhopt',
+    'UK-WHO growth reference omitting preterm' = 'ukwhoterm',
+    'CDC 2000 growth reference' = 'cdc2000',
+    'WHO 2006 growth standard' = 'who06',
+    'WHO 2006 growth standard & WHO 2007 growth reference' = 'who0607',
+    'IOTF international body mass index reference' = 'iotf'
   )
 }
 

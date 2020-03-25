@@ -5,7 +5,7 @@
   fluidPage(
     sidebarLayout(
       sidebarPanel(
-        h3("set L, M and S"),
+        h3("LMS density"),
         sliderInput(ns('L'), 'L', value = 1, min = -4, max = 6, step = 0.1, ticks = TRUE),
         shinyWidgets::sliderTextInput(ns("M"),"M",
                                       choices=c(outer(c(1, 2, 5), 10^(-3:2)), 1e3),

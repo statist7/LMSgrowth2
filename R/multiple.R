@@ -7,7 +7,7 @@
   fluidPage(
     sidebarLayout(
       sidebarPanel(
-        h3("Measurements to SDS"),
+        h3("Multiple children"),
         
         conditionalPanel(
           condition = "output['multiple-uploaded'] == false",
@@ -99,7 +99,7 @@
   # save uploaded data and update options
   observeEvent(input$file, {
     if(!is.null(input$file)) {
-      df <- as.data.frame(read.csv(input$file$datapath))
+      df <- as.data.frame(rio::import(input$file$datapath))
       numeric_columns <- vapply(df, is.numeric, FUN.VALUE = logical(1))
       df[,numeric_columns] <- round(df[,numeric_columns],
                                     digits = globals$roundToDigits)
