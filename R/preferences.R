@@ -107,11 +107,13 @@ NULL
 
       # if it's a user uploaded growth reference
       if (stringr::str_starts(input$growth_ref, GROWTH_REF_PREFIX)) {
+        # get the file path to the growth references using the user's uuid
         user_growth_ref <- file.path(USER_UPLOAD_DIR, input$jscookie$uuid, input$growth_ref)
+        # read in the growth reference and set the name
         growth_ref_data <- rio::import(user_growth_ref)
         globalValues$growthReferenceName <- stringr::str_replace(input$growth_ref, GROWTH_REF_PREFIX, '')
       } else {
-        # it's a sitar growth reference
+        # it's a sitar growth reference, load the data and set the name
         references <- .get_references()
         growth_ref_data <- .get_sitar_data(input$growth_ref)
         globalValues$growthReferenceName <- names(references)[references == input$growth_ref]
@@ -128,7 +130,7 @@ NULL
     }
   })
 
-  # when use uploads a growth reference file
+  # when user uploads a growth reference file
   observeEvent(input$growth_ref_file, {
     # TODO: validate input!
 
