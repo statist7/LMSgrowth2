@@ -510,6 +510,12 @@ Version: 0.5.1
 Hash: 94cf169fce3b79ae1301b787bb1cc276
 Requires: htmltools, jsonlite, scales, shiny
 
+Package: shinyhelper
+Source: CRAN
+Version: 0.3.2
+Hash: 85656e04a8e25093027473be83564af9
+Requires: markdown, shiny
+
 Package: shinyjs
 Source: CRAN
 Version: 1.1
