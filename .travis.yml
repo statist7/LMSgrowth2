@@ -11,6 +11,11 @@ cache:
     - $TRAVIS_BUILD_DIR/packrat/lib
   packages: true
 
+addons:
+  apt:
+    packages:
+    - libv8-dev
+
 install:
   - R -e "install.packages(c('devtools', 'usethis', 'testthat', 'packrat'))"
   - R -e "0" --args --bootstrap-packrat

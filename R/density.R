@@ -1,8 +1,12 @@
-# density tab ##############################################################
-.densityUI <- function(id, label="visualise distribution") {
+#-------------------------------------------------------------------------------
+# The ui and server Shiny components to interact with LMS densities
+#-------------------------------------------------------------------------------
+
+.densityUI <- function(id) {
   ns <- NS(id)
   
   fluidPage(
+    .titleBar('density', 'LMS density', ns('titleBar')),
     sidebarLayout(
       sidebarPanel(
         h3("LMS density"),
@@ -12,16 +16,17 @@
                                       selected=1, grid = TRUE),
         sliderInput(ns('S'), 'S', value = 0.2, min = 0, max = 1, step = 0.01, ticks = TRUE),
         textInput(ns('centiles'), 'distribution centiles', 
-                  paste(gsub('[a-z]', '', sitar::z2cent(-4:4*2/3)), collapse=' '))
+                  paste(gsub('[a-z]', '', sitar::z2cent(-4:4*2/3)), collapse=' ')),
+        id='density-sidebarPanel'
       ),
       mainPanel(
-        plotOutput(ns('plotout'))
+        plotOutput(ns('plotout')),
+        id='density-mainPanel'
       )
     )
   )
 }
 
-# pdLMS server logic ########################################################
 .density <- function(input, output, session, globals) {
   ns <- session$ns
   output$plotout <- renderPlot({
@@ -31,7 +36,13 @@
     if (length(zcent) == 0)
       zcent <- NULL
     else
-      zcent <- qnorm(zcent/100)
+      zcent <- stats::qnorm(zcent/100)
     sitar::pdLMS(L = input$L, M = input$M, S = input$S, zcent = zcent, pch = 25, las = 1)
   })
+  
+  # handle the sidebar show/hide
+  uiStatus <- reactiveValues(Sidebar=TRUE)
+  observeEvent(input$titleBar,
+               .titleBarToggle('density', input$titleBar, uiStatus, session),
+               ignoreNULL=FALSE)
 }

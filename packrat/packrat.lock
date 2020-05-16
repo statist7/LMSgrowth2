@@ -10,8 +10,8 @@ Hash: fc53be86f0b712d3de03fef95893d710
 
 Package: DT
 Source: CRAN
-Version: 0.12
-Hash: 9f631a094daa8873d49a9ac2a7209a89
+Version: 0.13
+Hash: f49c91ed6b763523e21e9a830cb6a2ca
 Requires: crosstalk, htmltools, htmlwidgets, jsonlite, magrittr,
     promises
 
@@ -40,6 +40,12 @@ Source: CRAN
 Version: 1.78
 Hash: deb628f138abd8575037bcf662a99259
 
+Package: V8
+Source: CRAN
+Version: 3.0.2
+Hash: 2012354dac32ffb2c7037c94c5bbb7a0
+Requires: Rcpp, curl, jsonlite
+
 Package: askpass
 Source: CRAN
 Version: 1.1
@@ -53,8 +59,8 @@ Hash: 622be49032fe50bd42e96aaef613e209
 
 Package: backports
 Source: CRAN
-Version: 1.1.5
-Hash: 35ad64fcf2063e2a52031b0f1a59d8f0
+Version: 1.1.7
+Hash: eac10bc96ef812453ce7f242aa67aafe
 
 Package: base64enc
 Source: CRAN
@@ -63,8 +69,8 @@ Hash: c590d29e555926af053055e23ee79efb
 
 Package: callr
 Source: CRAN
-Version: 3.4.2
-Hash: 5ead8c9d3ad6863bd4a8aca78ce3386c
+Version: 3.4.3
+Hash: e9b50bc56e655025fde6f2f4b65154de
 Requires: R6, processx
 
 Package: cellranger
@@ -174,8 +180,8 @@ Requires: future, globals, purrr, rlang
 
 Package: future
 Source: CRAN
-Version: 1.16.0
-Hash: a18bd69b9a7ea71e30ff5a493243978f
+Version: 1.17.0
+Hash: 722958b10986bdc608c38efd0b9de2f0
 Requires: digest, globals, listenv
 
 Package: generics
@@ -196,8 +202,8 @@ Hash: 93c51eaf39b178fd11ff574d3eae5b88
 
 Package: glue
 Source: CRAN
-Version: 1.3.2
-Hash: fb50a5bde4eab383b1307003bbac25dd
+Version: 1.4.1
+Hash: 740ccee1066d96aeb3f4d1e571245913
 
 Package: gtable
 Source: CRAN
@@ -252,8 +258,8 @@ Requires: R6, curl, jsonlite, mime, openssl
 
 Package: isoband
 Source: CRAN
-Version: 0.2.0
-Hash: a66c2fe7ba2f57efc08de400baa491f5
+Version: 0.2.1
+Hash: 2d05acf4e1b63d514295e1305025fe02
 Requires: Rcpp, testthat
 
 Package: jsonlite
@@ -324,8 +330,8 @@ Requires: askpass
 
 Package: openxlsx
 Source: CRAN
-Version: 4.1.4
-Hash: 00a4969f7a0a152be844860565294694
+Version: 4.1.5
+Hash: 428a0ab8eb518af8efe1639a19dc2c3b
 Requires: Rcpp, stringi, zip
 
 Package: packrat
@@ -336,22 +342,17 @@ GithubRepo: packrat
 GithubUsername: rstudio
 GithubRef: master
 GithubSha1: 448aafd176ec6cbde307f556c91b39e5a1c94f9d
-RemoteHost: api.github.com
-RemoteRepo: packrat
-RemoteUsername: rstudio
-RemoteRef: master
-RemoteSha: 448aafd176ec6cbde307f556c91b39e5a1c94f9d
 
 Package: pillar
 Source: CRAN
-Version: 1.4.3
-Hash: 64ebcd61a33f2bd9059ffa8a323fd620
+Version: 1.4.4
+Hash: a49a235ae5deaefbb3f6053d67dc64d0
 Requires: cli, crayon, fansi, rlang, utf8, vctrs
 
 Package: pkgbuild
 Source: CRAN
-Version: 1.0.6
-Hash: f41de345bf0dda984cce64a7ea668ea4
+Version: 1.0.8
+Hash: 7f686e4c50ab63ae95537067d577de3f
 Requires: R6, callr, cli, crayon, desc, prettyunits, rprojroot, withr
 
 Package: pkgconfig
@@ -372,8 +373,8 @@ Hash: 81a8008a5e7858552503935f1abe48aa
 
 Package: plotly
 Source: CRAN
-Version: 4.9.2
-Hash: cb3ca7d95c5ef3eb319fcb22542160d7
+Version: 4.9.2.1
+Hash: eeb9c83733cd3c9852c727b48678ce9a
 Requires: RColorBrewer, base64enc, crosstalk, data.table, digest,
     dplyr, ggplot2, hexbin, htmltools, htmlwidgets, httr, jsonlite,
     lazyeval, magrittr, promises, purrr, rlang, scales, tibble, tidyr,
@@ -415,19 +416,19 @@ Requires: R6, Rcpp, later, magrittr, rlang
 
 Package: ps
 Source: CRAN
-Version: 1.3.2
-Hash: 6e8ed574a4550ce4f72cdafa9227152b
+Version: 1.3.3
+Hash: 017cf9da2d29e4134b5e3e58176a87ad
 
 Package: purrr
 Source: CRAN
-Version: 0.3.3
-Hash: d4f497f8a97ef6c7182a87b2476748d1
+Version: 0.3.4
+Hash: fb4c0edca61826ca0b5b33c828a7b276
 Requires: magrittr, rlang
 
 Package: quantreg
 Source: CRAN
-Version: 5.54
-Hash: b1662addfb95ee8dc4f72408e65b97b1
+Version: 5.55
+Hash: 8518ba15058ddb0932d7b0d815a607f4
 Requires: MatrixModels, SparseM
 
 Package: readr
@@ -449,8 +450,8 @@ Hash: ad4faf59e7611117ff165817074c50c7
 
 Package: reshape2
 Source: CRAN
-Version: 1.4.3
-Hash: 28a0f360dfdf44fc286ce1d9f7cd0ebf
+Version: 1.4.4
+Hash: 075c066b408f01647f627f25dbe3e792
 Requires: Rcpp, plyr, stringr
 
 Package: rio
@@ -461,8 +462,8 @@ Requires: curl, data.table, haven, openxlsx, readxl, tibble
 
 Package: rlang
 Source: CRAN
-Version: 0.4.5
-Hash: 99d62d0aaf54a9938784f4485efa9933
+Version: 0.4.6
+Hash: 961439fc46343c94eb50973664feee76
 
 Package: rmarkdown
 Source: CRAN
@@ -479,8 +480,8 @@ Requires: backports
 
 Package: rsample
 Source: CRAN
-Version: 0.0.5
-Hash: a45d4671df3260f198438aa0fa5fef19
+Version: 0.0.6
+Hash: 3f888fb862bb0a198099a322b788c754
 Requires: dplyr, furrr, generics, purrr, rlang, tibble, tidyr,
     tidyselect
 
@@ -491,8 +492,8 @@ Hash: f8674fe40760ccfc1bf3e92da4c9f4d0
 
 Package: scales
 Source: CRAN
-Version: 1.1.0
-Hash: fa53af4e3ceba05fc79a31bde5962445
+Version: 1.1.1
+Hash: b67ae9f62ecb8912751eb664055d8f8a
 Requires: R6, RColorBrewer, farver, labeling, lifecycle, munsell,
     viridisLite
 
@@ -551,27 +552,28 @@ Requires: R6, cli, crayon, digest, ellipsis, evaluate, magrittr,
 
 Package: tibble
 Source: CRAN
-Version: 2.1.3
-Hash: f59680d81ddc45fa3fcb8c07686d1d89
-Requires: cli, crayon, fansi, pillar, pkgconfig, rlang
+Version: 3.0.1
+Hash: 00d3817b8530e9ce9b465aeef293a011
+Requires: cli, crayon, ellipsis, fansi, lifecycle, magrittr, pillar,
+    pkgconfig, rlang, vctrs
 
 Package: tidyr
 Source: CRAN
-Version: 1.0.2
-Hash: f57210b5eba48eb91d8300d605e7e25f
+Version: 1.0.3
+Hash: 3883a9fe9ef80e0f68e6ff642eb01d2c
 Requires: Rcpp, dplyr, ellipsis, glue, lifecycle, magrittr, purrr,
     rlang, stringi, tibble, tidyselect, vctrs
 
 Package: tidyselect
 Source: CRAN
-Version: 1.0.0
-Hash: 0ba21f624978533adf670338aa3f86b4
+Version: 1.1.0
+Hash: 1c7cea9ea925b701a93f378ec7233ee1
 Requires: ellipsis, glue, purrr, rlang, vctrs
 
 Package: tinytex
 Source: CRAN
-Version: 0.20
-Hash: d275fbbbb28076b2b55ef81e109f777f
+Version: 0.22
+Hash: 3caad813c309bf230229b9025ac0a28e
 Requires: xfun
 
 Package: utf8
@@ -586,8 +588,8 @@ Hash: b0fcab4d6aa43d97cf09e336b65b906f
 
 Package: vctrs
 Source: CRAN
-Version: 0.2.4
-Hash: e06451edcd80df3a07b71fe7f5d10739
+Version: 0.3.0
+Hash: bd31aa68718ec5d68c187cc9aed0703b
 Requires: digest, ellipsis, glue, rlang
 
 Package: viridisLite
@@ -597,13 +599,13 @@ Hash: 78bb072c4f9e729a283d4c40ec93f9c6
 
 Package: withr
 Source: CRAN
-Version: 2.1.2
-Hash: d534108bcd5f34ec73e9eb523751ba20
+Version: 2.2.0
+Hash: 709a3da4deef928ab299f4ff52caf66b
 
 Package: xfun
 Source: CRAN
-Version: 0.12
-Hash: 1c81f85035dee1e1bf48e09a57928c9b
+Version: 0.13
+Hash: 27ad2c3d9cc614cfb92e1bb51b62f5f6
 
 Package: xtable
 Source: CRAN

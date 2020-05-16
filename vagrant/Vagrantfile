@@ -1,0 +1,46 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+# Vagrant VM installs R and the LMSgrowth2 library with dependencies from source
+# The LMSgrowth2 package installation is run on every boot (i.e. kept up-to-date)
+# The Shiny web application runs on http://127.0.0.1:3001/ 
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/bionic64"
+
+  config.vm.network "forwarded_port", guest: 3001, host: 3001
+  config.vm.synced_folder "..", "/mnt/LMSgrowth2"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "2048"
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    # Install R from r-project
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+    add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'
+
+    # Install R
+    apt-get -q update
+    apt-get -q -y install r-base r-base-dev
+
+    # Install system library dependencies for R packages
+    apt-get -q -y install libcurl4-gnutls-dev libgit2-dev libssh2-1-dev libssl-dev libv8-dev libxml2-dev
+  SHELL
+
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    # User R library path
+    mkdir -p ~/R/x86_64-pc-linux-gnu-library/3.6
+
+    git clone /mnt/LMSgrowth2
+
+    R -e "install.packages('devtools')"
+  SHELL
+
+
+  config.vm.provision "shell", privileged: false, run: 'always', inline: <<-SHELL
+    R -e "devtools::install('./LMSgrowth2')"
+    nohup R -e "options(shiny.host='0.0.0.0', shiny.port=3001); LMSgrowth2::run_app()" &> /home/vagrant/nohup.LMSgrowth2.out &
+  SHELL
+end
+

@@ -2,12 +2,23 @@ Package: LMSgrowth2
 Type: Package
 Title: Working with Growth References using the LMS Method
 Version: 0.1.0
-Author: Tim Cole, David Pérez-Suárez, Asif U Tamuri
-Maintainer: Asif U Tamuri <a.tamuri@ucl.ac.uk>
-Description: Working with Growth References using the LMS Method
-License: What license is it under?
-Imports: shiny, sitar
+Author: Tim Cole, Mosè Giordano, Asif U Tamuri
+Maintainer: Tim Cole <tim.cole@ucl.ac.uk>
+Description: A web application for working with growth references using the LMS method.
+License: file LICENSE
+Imports: dplyr, shiny, shinyjs, purrr, stringr, plotly, DT, formattable, shinyWidgets, sitar, uuid, rio, V8
 Encoding: UTF-8
 LazyData: true
 Suggests: 
     testthat
+RoxygenNote: 7.1.0
+Collate: 
+    'functions.R'
+    'centile.R'
+    'density.R'
+    'help.R'
+    'preferences.R'
+    'multiple.R'
+    'single.R'
+    'main.R'
+    'run_app.R'

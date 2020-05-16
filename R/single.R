@@ -1,53 +1,58 @@
-source("R/functions.R", local = TRUE)
+#' @include functions.R
+NULL
 
-# Measurement to SDS calculator ###############################################
-.calculatorUI <- function(id, label="calculator ui") {
+#-------------------------------------------------------------------------------
+# The ui and server Shiny components for calculations involving single child
+#-------------------------------------------------------------------------------
+
+.singleUI <- function(id) {
   ns <- NS(id)
   
   fluidPage(
+    .titleBar('single', 'One child', ns('titleBar')),
     sidebarLayout(
       sidebarPanel(
-        h3("One child"),
         radioButtons(ns("sex"), label = h4("Sex"), choices = list("Male" = 1, "Female" = 2),  selected = 1, inline = T),
         radioButtons(ns("age_setting"), choices = list("Age" = "age", "Date" = "dates"), selected = "age", label = h4("Age"), inline=TRUE),
         conditionalPanel(
-          condition = "input['calculator-age_setting'] == 'age'",
+          condition = "input['single-age_setting'] == 'age'",
           fluidRow(
             column(6,  numericInput(ns("age_years"), "Years", value="", min=0), numericInput(ns("age_weeks"), "Weeks", value="", min=0)),
             column(6,  numericInput(ns("age_months"), "Months", value="", min=0), numericInput(ns("age_days"), "Days", value="", min=0))
           )
         ),
         conditionalPanel(
-          condition = "input['calculator-age_setting'] == 'dates'",
+          condition = "input['single-age_setting'] == 'dates'",
           dateInput(ns("date_of_birth"), "Birth"),
           dateInput(ns("date_of_measurement"), "Measurement")
         ),
         checkboxInput(ns("adjust_gestation"), label = "Adjust for gestational age",
                       value = FALSE),
         conditionalPanel(
-          condition = "input['calculator-adjust_gestation']",
+          condition = "input['single-adjust_gestation']",
           numericInput(ns("gestational_age"), label = "Gestational age (weeks)",
                        value = 40, min = 0, max = 100)
         ),
         h4("Measurements"),
         uiOutput(ns("measurement_inputs")),
         h4("Plot options"),
-        radioButtons(ns("plot_axis_select"), label = NULL, choices = list("Centile", "z-score"), selected = "Centile", inline = T)
+        radioButtons(ns("plot_axis_select"), label = NULL, choices = list("Centile", "z-score"), selected = "Centile", inline = T),
+        id='single-sidebarPanel'
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
         h3(textOutput(ns("growth_ref"))),      
         h4(textOutput(ns("age_info"))),
-        formattableOutput(ns("measurement_table")),
-        plotlyOutput(ns("measurement_plot"))
+        formattable::formattableOutput(ns("measurement_table")),
+        plotly::plotlyOutput(ns("measurement_plot")),
+        id='single-mainPanel'
       )
     )
   )
 }
 
-# Measurement to SDS calculator server #######################################################
-.calculator <- function(input, output, session, globals) {
+.single <- function(input, output, session, globals) {
   ns <- session$ns
   
   age_in_years <- reactive({
@@ -86,7 +91,7 @@ source("R/functions.R", local = TRUE)
   # create input tags for each measurement available in the selected growth reference
   output$measurement_inputs <- renderUI({
     # keep an ordered list of measurements
-    calculated_measurements[['.codes']] <- globals$growthReferenceMeasures %>% map_chr(function(x) { x[['code']] })
+    calculated_measurements[['.codes']] <- globals$growthReferenceMeasures %>% purrr::map_chr(function(x) { x[['code']] })
     
     measures <- lapply(globals$growthReferenceMeasures,
            function(measure) {
@@ -152,9 +157,9 @@ source("R/functions.R", local = TRUE)
     df <- df[df$code %in% calculated_measurements$.codes,]
     
     # all the columns are double except 'code' and 'Centile' columns (keep them as string)
-    df <- df %>% tbl_df %>% 
-      mutate_at(grep("code|Centile", colnames(.), invert=T), funs(as.numeric)) %>% 
-      mutate_if(is.numeric, round, 2) %>% 
+    df <- df %>% dplyr::tbl_df(.) %>% 
+      dplyr::mutate_at(grep("code|Centile", colnames(.), invert=T), dplyr::funs(as.numeric)) %>% 
+      dplyr::mutate_if(is.numeric, round, 2) %>% 
       as.data.frame()
     
     # order the columns by the order they appear in the growth reference/input boxes
@@ -162,7 +167,7 @@ source("R/functions.R", local = TRUE)
     
     # use the descriptive name of measurement
     df$description <- sapply(calculated_measurements$.codes, 
-                             function(x1) { detect(globals$growthReferenceMeasures, function(x2) { x2[['code']] == x1})$description })
+                             function(x1) { purrr::detect(globals$growthReferenceMeasures, function(x2) { x2[['code']] == x1})$description })
     
     # remove all measurements that don't have calculations
     df <- df[!(is.na(df$SDS)), ]
@@ -179,14 +184,14 @@ source("R/functions.R", local = TRUE)
     calculated_statistics(df)
   })
   
-  output$measurement_table <- renderFormattable({
+  output$measurement_table <- formattable::renderFormattable({
     validate(
       validate_input()
     )
     if (is.data.frame(calculated_statistics()) &&  nrow(calculated_statistics()) > 0) {
-      formattable(calculated_statistics(), list())
+      formattable::formattable(calculated_statistics(), list())
     } else {
-      formattable(data.frame(), list())
+      formattable::formattable(data.frame(), list())
     }
   })
   
@@ -234,7 +239,7 @@ source("R/functions.R", local = TRUE)
     }
   )
   
-  output$measurement_plot <- renderPlotly({
+  output$measurement_plot <- plotly::renderPlotly({
     validate(
       validate_input()
     )
@@ -262,7 +267,7 @@ source("R/functions.R", local = TRUE)
     
     label <- input$plot_axis_select
     
-    plot_ly(x = ~measurement_names, 
+    plotly::plot_ly(x = ~measurement_names, 
             y = ~measurement_y, 
             type="scatter", 
             mode="markers", 
@@ -270,13 +275,19 @@ source("R/functions.R", local = TRUE)
             hoverinfo = "text", 
             hovertext = paste0("(", measurement_names, "; z = ", df$SDS, "; centile = ", df$Centile,  ")")
             ) %>% 
-      layout(yaxis = list(autorange = FALSE, 
-                          range = range,
-                          tickvals = tickvals,
-                          tickmode = "array",
-                          ticktext = as.character(tickvals),
-                          title = list(text=label),
-                          zeroline = FALSE),
-             xaxis = list(title = list(text="Measurement")))
+      plotly::layout(yaxis = list(autorange = FALSE,   
+                                  range = range, 
+                                  tickvals = tickvals, 
+                                  tickmode = "array", 
+                                  ticktext = as.character(tickvals), 
+                                  title = list(text=label), 
+                                  zeroline = FALSE), 
+                     xaxis = list(title = list(text="Measurement")))
   })
+  
+  # handle the sidebar show/hide
+  uiStatus <- reactiveValues(Sidebar=TRUE)
+  observeEvent(input$titleBar,
+               .titleBarToggle('single', input$titleBar, uiStatus, session),
+               ignoreNULL=FALSE)
 }

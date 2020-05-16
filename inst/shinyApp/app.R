@@ -1,1 +1,0 @@
-LMSgrowth2::launchApp()

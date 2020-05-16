@@ -1,14 +1,17 @@
-# Tab for multiple measurements ##############################################################
+#' @include functions.R
+NULL
 
-# UI
-.multipleUI <- function(id, label="multiple measurements") {
+#-------------------------------------------------------------------------------
+# The ui and server Shiny components for calculations involving multiple children
+#-------------------------------------------------------------------------------
+
+.multipleUI <- function(id){
   ns <- NS(id)
 
   fluidPage(
+    .titleBar('multiple', 'Multiple children', ns('titleBar')),
     sidebarLayout(
       sidebarPanel(
-        h3("Multiple children"),
-        
         conditionalPanel(
           condition = "output['multiple-uploaded'] == false",
           fileInput(ns('file'), 'Upload data file')
@@ -32,35 +35,34 @@
           actionButton(ns('apply'), 'Apply'),
           downloadButton(ns("download_data"), "Download"),
           actionButton(ns("reset"), "Reset", icon("refresh"))
-        )
+        ),
+        id='multiple-sidebarPanel'
       ),
 
       mainPanel(
         h3(textOutput(ns("growth_ref"))),
-        DTOutput(ns("table")),
+        DT::DTOutput(ns("table")),
         br(),
-        fluidRow(
-          wellPanel(
-            checkboxGroupInput(ns("plot_options"), label = "Plotting options",
-                               choices = c("Group by ID" = "group_id",
-                                           "Connect the points" = "connect_points"),
-                               selected = c("connect_points", "group_id"),
-                               inline = TRUE),
-            radioButtons(ns("plot_y_axis"), label = "y-axis",
-                         choices = list("Measurement" = "measurement",
-                                        "Centile" = "centile",
-                                        "SDS" = "sds"),
-                         selected = "measurement", inline = TRUE)
-          )
+        wellPanel(
+          checkboxGroupInput(ns("plot_options"), label = "Plotting options",
+                             choices = c("Group by ID" = "group_id",
+                                         "Connect the points" = "connect_points"),
+                             selected = c("connect_points", "group_id"),
+                             inline = TRUE),
+          radioButtons(ns("plot_y_axis"), label = "y-axis",
+                       choices = list("Measurement" = "measurement",
+                                      "Centile" = "centile",
+                                      "SDS" = "sds"),
+                       selected = "measurement", inline = TRUE)
         ),
         br(),
-        plotlyOutput(ns("measurements_plots"))
+        plotly::plotlyOutput(ns("measurements_plots")),
+        id='multiple-mainPanel'
       )
     )
   )
 }
 
-# Server
 .multiple <- function(input, output, session, globals) {
   # To use `renderUI` within modules, we need to wrap names with `ns()`
   ns <- session$ns
@@ -137,11 +139,12 @@
   })
 
   # outputs the datatable in the main panel
-  output$table <- renderDT(datatable(original_data$df,
-                                     filter = "top",
-                                     rownames = FALSE,
-                                     options = list(scrollX = TRUE,
-                                                    sDom  = '<"top">lrt<"bottom">ip')))
+  output$table <- DT::renderDT(DT::datatable(original_data$df, 
+                                             filter = "top", 
+                                             rownames = FALSE, 
+                                             options = list(scrollX = TRUE, sDom  = '<"top">lrt<"bottom">ip')
+                                             )
+                               )
 
   # fills the 'selected' argument for selectInput when column names matches a regular expression.
   # `code` is a short name for the item that we want to match in the list of columns
@@ -309,13 +312,11 @@
       plot_name <- ""
     }
 
-    plt <- plot_ly(type = "scatter", x = ages, y = y_data,
-                   color = plot_name,
-                   colors = "Dark2",
-                   mode = plot_mode,
-                   showlegend = FALSE) %>%
-      layout(xaxis = list(title = paste0("Age (", age_unit, ")")),
-             yaxis = list(title = y_title))
+    plt <- plotly::plot_ly(type = "scatter", x = ages, y = y_data, 
+                           color = plot_name, colors = "Dark2", 
+                           mode = plot_mode, showlegend = FALSE) %>% 
+      plotly::layout(xaxis = list(title = paste0("Age (", age_unit, ")")), 
+                     yaxis = list(title = y_title))
 
     # Plot centiles if necessary, that is when all selected sexes are equal
     if (length(sexes) == 1 || length(unique(sexes[input$table_rows_all])) == 1) {
@@ -339,23 +340,23 @@
                                  toz = FALSE)
         for (col in colnames(centiles)) {
           this_centile <- centiles[,col]
-          plt <- add_lines(plt, x = centiles_ages, y = this_centile,
-                           type = "scatter",
-                           color = col,
-                           legendgroup = col,
-                           showlegend = show_centile_legend,
-                           opacity = 0.6,
-                           line = list(dash='dash'),
-                           hoverinfo = "name+text",
-                           hovertext = paste0("(",
-                                              signif(centiles_ages,
-                                                     globals$roundToSignificantDigits),
-                                              ", ",
-                                              signif(centiles[,col],
-                                                     globals$roundToSignificantDigits),
-                                              ")"),
-                           showlegend = TRUE
-                           )
+          plt <- plotly::add_lines(plt, x = centiles_ages, y = this_centile,
+                                   type = "scatter",
+                                   color = col,
+                                   legendgroup = col,
+                                   showlegend = show_centile_legend,
+                                   opacity = 0.6,
+                                   line = list(dash='dash'),
+                                   hoverinfo = "name+text",
+                                   hovertext = paste0("(",
+                                                      signif(centiles_ages,
+                                                             globals$roundToSignificantDigits),
+                                                      ", ",
+                                                      signif(centiles[,col],
+                                                             globals$roundToSignificantDigits),
+                                                      ")"),
+                                   showlegend = TRUE
+          )
         }
       }
     }
@@ -364,7 +365,7 @@
   }
 
   plot_all_measures <- function() {
-    renderPlotly({
+    plotly::renderPlotly({
       if (original_data$initialised) {
         # We first filter the known measurements to find which ones are present
         # in the current data.
@@ -385,11 +386,11 @@
         # Plot only if there is something to plot
         if (plots_number >= 1) {
           # Plot them together with `subplot`
-          subplot(plots, nrows = plots_number, shareX = TRUE, titleY = TRUE) %>%
+          plotly::subplot(plots, nrows = plots_number, shareX = TRUE, titleY = TRUE) %>%
             # This causes a warning to be issued, but this is really a bug in
             # plotly that doesn't allow to set the size of a subplot in a sane
             # way: https://github.com/ropensci/plotly/issues/1613
-            layout(autosize = TRUE, height = plots_number * 400)
+            plotly::layout(autosize = TRUE, height = plots_number * 400)
         }
       }
     })
@@ -402,7 +403,7 @@
   output$download_data <- downloadHandler(
     filename = 'lms_download.csv',
     content = function(file) {
-      write.csv(original_data$df, file, row.names = FALSE)
+      utils::write.csv(original_data$df, file, row.names = FALSE)
     }
   )
   
@@ -415,6 +416,12 @@
     original_data$offset <- 0
     original_data$initialised <- FALSE
     uploaded <- FALSE
-    reset("file")
+    shinyjs::reset("file")
   })
+  
+  # handle the sidebar show/hide
+  uiStatus <- reactiveValues(Sidebar=TRUE)
+  observeEvent(input$titleBar,
+               .titleBarToggle('multiple', input$titleBar, uiStatus, session),
+               ignoreNULL=FALSE)
 }

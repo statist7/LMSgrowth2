@@ -1,11 +1,17 @@
-# Centile tab ##################################################################
-.centileUI <- function(id, label="centile ui") {
+#' @include functions.R
+NULL
+
+#-------------------------------------------------------------------------------
+# The ui and server Shiny components to create growth curve centile tables and plots
+#-------------------------------------------------------------------------------
+
+.centileUI <- function(id) {
   ns <- NS(id)
 
   fluidPage(
+    .titleBar('centile', 'Centiles', ns('titleBar')),
     sidebarLayout(
       sidebarPanel(
-        h3("Centiles"),
         selectInput(ns("measure"), label = h4("Measurement"),
                     choices = list(), selected = ""),
         checkboxGroupInput(ns("sex"), label = h4("Sex"),
@@ -57,26 +63,27 @@
         radioButtons(ns("header_centile_or_sds"), label = h4("Header options"),
                      choices = list("Centiles" = "centile", "SDSs" = "sds"),
                      selected = "centile", inline = TRUE),
-        uiOutput(ns("download_ui"))
+        uiOutput(ns("download_ui")),
+        id='centile-sidebarPanel'
       ),
       mainPanel(
         h3(textOutput(ns("centilesTitle"))),
         h4(textOutput(ns("centileFemaleCaption"))),
-        DTOutput(ns("centileFemale")),
+        DT::DTOutput(ns("centileFemale")),
         br(),
         uiOutput(ns("centilePlotFemaleUI")),
         br(),
         br(),
         h4(textOutput(ns("centileMaleCaption"))),
-        DTOutput(ns("centileMale")),
+        DT::DTOutput(ns("centileMale")),
         br(),
-        uiOutput(ns("centilePlotMaleUI"))
+        uiOutput(ns("centilePlotMaleUI")),
+        id='centile-mainPanel'
       )
     )
   )
 }
 
-# Centile server logic #########################################################
 .centile <- function(input, output, session, globals) {
   ns <- session$ns
 
@@ -100,7 +107,7 @@
   centilesTitle <- function() {
     renderText({
       measurement_description <- get_measurement_description()
-      paste(globals$growthReferenceName, "—", measurement_description)
+      paste(globals$growthReferenceName, "-", measurement_description)
     })
   }
 
@@ -120,7 +127,7 @@
 
   # Return the table of the centiles for the given sex
   centiles <- function(sex) {
-    renderDT({
+    DT::renderDT({
       output_data[[sex]] <- NULL
       plot_data[[sex]] <- NULL
       if (sex %in% input$sex) {
@@ -137,7 +144,7 @@
               need(all(values >= 0) && all(values <= 100),
                    "Centiles must be between 0 and 100")
             )
-            globals$z_scores <- qnorm(values / 100)
+            globals$z_scores <- stats::qnorm(values / 100)
           }
         } else {
           validate(
@@ -244,10 +251,10 @@
         }
         # Finally return the dataframe
         output_data[[sex]] %>%
-          datatable(rownames = FALSE,
-                    # See https://stackoverflow.com/a/35627085/2442087 for how
-                    # to hide the search box
-                    options = list(sDom  = '<"top">lrt<"bottom">ip'))
+          DT::datatable(rownames = FALSE,
+                        # See https://stackoverflow.com/a/35627085/2442087 for how
+                        # to hide the search box
+                        options = list(sDom  = '<"top">lrt<"bottom">ip'))
       }
     })
   }
@@ -255,16 +262,16 @@
   update_output_data <- function() {
     f <- output_data$f
     m <- output_data$m
-    if ("f" %in% input$sex && ! is_empty(f)) {
+    if ("f" %in% input$sex && ! purrr::is_empty(f)) {
       f$sex <- 2
-      if ("m" %in% input$sex && ! is_empty(m)) {
+      if ("m" %in% input$sex && ! purrr::is_empty(m)) {
         m$sex <- 1
         output_data$total <- rbind(f, m)
       } else {
         output_data$total <- f
       }
     } else {
-      if ("m" %in% input$sex && ! is_empty(m)) {
+      if ("m" %in% input$sex && ! purrr::is_empty(m)) {
         m$sex <- 1
         output_data$total <- m
       } else {
@@ -290,27 +297,27 @@
   }
 
   centilesPlot <- function(sex) {
-    renderPlotly({
+    plotly::renderPlotly({
       columns <- names(output_data[[sex]])
       columns <- columns[2:length(columns)]
-      p <- plot_ly(type = "scatter", mode = "line") %>%
-        layout(xaxis = list(title = paste0("Age (", input$ageunit, ")")),
-               yaxis = list(title = get_measurement_description()))
+      p <- plotly::plot_ly(type = "scatter", mode = "line") %>%
+        plotly::layout(xaxis = list(title = paste0("Age (", input$ageunit, ")")),
+                       yaxis = list(title = get_measurement_description()))
       for (col in rev(columns)) {
-        p <- add_lines(p, x = plot_data$ages, y = plot_data[[sex]][[col]],
-                       type = "scatter", name = col, hoverinfo = "name+text",
-                       hovertext = paste0("(",
-                                          signif(plot_data$ages,
-                                                 globals$roundToSignificantDigits),
-                                          ", ",
-                                          signif(plot_data[[sex]][[col]],
-                                                 globals$roundToSignificantDigits),
-                                          ")"))
+        p <- plotly::add_lines(p, x = plot_data$ages, y = plot_data[[sex]][[col]],
+                               type = "scatter", name = col, hoverinfo = "name+text",
+                               hovertext = paste0("(",
+                                                  signif(plot_data$ages,
+                                                         globals$roundToSignificantDigits),
+                                                  ", ",
+                                                  signif(plot_data[[sex]][[col]],
+                                                         globals$roundToSignificantDigits),
+                                                  ")"))
       }
       p
     })
   }
-
+  
   # Render the main output objects
   output$rangeheader <- format_range_label() # This is actually in the side panel
   output$centilesTitle <- centilesTitle()
@@ -318,7 +325,7 @@
   output$centileFemale <- centiles("f")
   output$centilePlotFemaleUI <- renderUI({
     if (is.data.frame(output_data$f)) {
-      plotlyOutput(ns("centilePlotFemale"))
+      plotly::plotlyOutput(ns("centilePlotFemale"))
     }
   })
   output$centilePlotFemale <- centilesPlot("f")
@@ -326,7 +333,7 @@
   output$centileMale <- centiles("m")
   output$centilePlotMaleUI <- renderUI({
     if (is.data.frame(output_data$m)) {
-      plotlyOutput(ns("centilePlotMale"))
+      plotly::plotlyOutput(ns("centilePlotMale"))
     }
   })
   output$centilePlotMale <- centilesPlot("m")
@@ -338,7 +345,7 @@
   output$download_data <- downloadHandler(
     filename = 'centiles.csv',
     content = function(file) {
-      write.csv(output_data$total, file, row.names = FALSE)
+      utils::write.csv(output_data$total, file, row.names = FALSE)
     }
   )
 
@@ -352,7 +359,7 @@
                            function(m) {paste0(m$description, " (", m$unit,")")})
     codes <- sapply(globals$growthReferenceMeasures, function(m) {m$code})
     updateSelectInput(session, "measure",
-                      choices = as.list(setNames(codes, measurements)),
+                      choices = as.list(stats::setNames(codes, measurements)),
                       selected = codes[1])
   }
   # When the measurements in reference data change, update the title and the
@@ -452,4 +459,10 @@
   }
 
   observeEvent(globals$growthReference, set_age_start_stop())
+  
+  # handle the sidebar show/hide
+  uiStatus <- reactiveValues(Sidebar=TRUE)
+  observeEvent(input$titleBar,
+               .titleBarToggle('centile', input$titleBar, uiStatus, session),
+               ignoreNULL=FALSE)
 }

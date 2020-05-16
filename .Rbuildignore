@@ -2,3 +2,11 @@
 ^\.Rproj\.user$
 ^packrat/
 ^\.Rprofile$
+^\.travis\.yml$
+^inst\/uploads\/[0-9A-z\-]{36}$
+^vagrant/
+^Dockerfile$
+^.dockerignore$
+^app\.R$
+^shiny-server\.conf$
+^rsconnect/
