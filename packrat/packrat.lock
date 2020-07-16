@@ -1,6 +1,6 @@
 PackratFormat: 1.4
 PackratVersion: 0.5.0.25
-RVersion: 3.6.3
+RVersion: 4.0.2
 Repos: CRAN=https://cran.rstudio.com/
 
 Package: BH
@@ -42,8 +42,8 @@ Hash: deb628f138abd8575037bcf662a99259
 
 Package: V8
 Source: CRAN
-Version: 3.0.2
-Hash: 2012354dac32ffb2c7037c94c5bbb7a0
+Version: 3.2.0
+Hash: 650b3ed665117bdc6819d9991ad35d89
 Requires: Rcpp, curl, jsonlite
 
 Package: askpass
@@ -129,10 +129,10 @@ Hash: ec0a673866797c8c1fc1daa359fb4cad
 
 Package: dplyr
 Source: CRAN
-Version: 0.8.5
-Hash: 7b81844db1a93b164ddc4a83da0b1ac9
-Requires: BH, R6, Rcpp, assertthat, ellipsis, glue, magrittr,
-    pkgconfig, plogr, rlang, tibble, tidyselect
+Version: 1.0.0
+Hash: 4db17ac7cad6ce9c544dc8fc9709a75b
+Requires: R6, ellipsis, generics, glue, lifecycle, magrittr, rlang,
+    tibble, tidyselect, vctrs
 
 Package: ellipsis
 Source: CRAN
@@ -246,8 +246,8 @@ Requires: htmltools, jsonlite, yaml
 
 Package: httpuv
 Source: CRAN
-Version: 1.5.2
-Hash: b502e50e70f284126824f64476080091
+Version: 1.5.4
+Hash: dd143efc144cebbd003200b10a7f203b
 Requires: BH, R6, Rcpp, later, promises
 
 Package: httr
@@ -280,8 +280,8 @@ Hash: ecf589b42cd284b03a4beb9665482d3e
 
 Package: later
 Source: CRAN
-Version: 1.0.0
-Hash: 051117e43dc62d06a3e3db08dbb7f6a6
+Version: 1.1.0.1
+Hash: 039251e895d49ce63fe9d7a21fbf6d90
 Requires: BH, Rcpp, rlang
 
 Package: lazyeval
@@ -411,7 +411,7 @@ Requires: R6, crayon, hms, prettyunits
 Package: promises
 Source: CRAN
 Version: 1.1.0
-Hash: 7949da3ddac6418d32999a864d12cd2c
+Hash: e7317590152423c91feb285f1c7cc4b6
 Requires: R6, Rcpp, later, magrittr, rlang
 
 Package: ps
