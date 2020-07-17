@@ -12,7 +12,7 @@ NULL
     .titleBar('single', 'One child', ns('titleBar')),
     sidebarLayout(
       sidebarPanel(
-        radioButtons(ns("sex"), label = h4("Sex"), choices = list("Male" = 1, "Female" = 2),  selected = 1, inline = T),
+        radioButtons(ns("sex"), label = h4("Sex"), choices = list("Male" = 1, "Female" = 2),  selected = 1, inline = T) %>% shinyhelper::helper(content="help_single_child"),
         radioButtons(ns("age_setting"), choices = list("Age" = "age", "Date" = "dates"), selected = "age", label = h4("Age"), inline=TRUE),
         conditionalPanel(
           condition = "input['single-age_setting'] == 'age'",

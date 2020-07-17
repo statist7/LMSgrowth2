@@ -10,7 +10,7 @@ RUN apt-get update && apt-get -y install libcurl4-gnutls-dev libgit2-dev libssh2
 
 RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site
 
-RUN R -e "install.packages(c('dplyr', 'shiny', 'shinyjs', 'purrr', 'stringr', 'plotly', 'DT', 'formattable', 'shinyWidgets', 'sitar', 'uuid', 'rio', 'V8'))"
+RUN R -e "install.packages(c('dplyr', 'shiny', 'shinyjs', 'purrr', 'stringr', 'plotly', 'DT', 'formattable', 'shinyWidgets', 'sitar', 'uuid', 'rio', 'V8', 'shinyhelper'))"
 
 COPY . /srv/shiny-server/LMSgrowth2
 

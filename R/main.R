@@ -34,6 +34,8 @@ utils::globalVariables('.')
 }
 
 .server <- function(input, output, session) {
+  shinyhelper::observe_helpers(help_dir=system.file('assets', package='LMSgrowth2'))
+  
   # The preferences module returns a reactive value holding user preferences used in
   # all modules. That reactive value is passed as argument `globals` to all modules
   globals <- callModule(.preferences, "preferences")
