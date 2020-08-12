@@ -79,7 +79,13 @@ NULL
       # create user's uuid if one doesn't exist
       uuid_cookie <- isolate(input$jscookie$uuid)
       if (is.null(uuid_cookie)) {
-        new_uuid <- uuid::UUIDgenerate()
+        # couldn't figure out how to use shiny::snapshotPreprocessInput() so
+        # overriding the randomly-generated uuid by checking for testmode
+        if (isTRUE(getOption("shiny.testmode"))) {
+            new_uuid = "shiny-testsmode-uuid"
+        } else {
+            new_uuid <- uuid::UUIDgenerate()
+        }
         shinyjs::js$setcookie(name='uuid', value=new_uuid)
         status$uuid <- new_uuid
       } else {
