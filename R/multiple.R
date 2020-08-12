@@ -96,6 +96,12 @@ NULL
                        })
     do.call(tagList, measures)
   })
+  
+  # save the 8-colour palette "Dark2" from RColorBrewer. We do this, otherwise it
+  # shows many warnings when number of groups > 8 (colours are reused when displayed)
+  # Related answer here:
+  # https://stackoverflow.com/questions/38740837/custom-discrete-color-scale-in-plotly
+  group_colors <- RColorBrewer::brewer.pal(8, "Dark2")
 
 
   # save uploaded data and update options
@@ -313,7 +319,7 @@ NULL
     }
 
     plt <- plotly::plot_ly(type = "scatter", x = ages, y = y_data, 
-                           color = plot_name, colors = "Dark2", 
+                           color = plot_name, colors = group_colors, 
                            mode = plot_mode, showlegend = FALSE) %>% 
       plotly::layout(xaxis = list(title = paste0("Age (", age_unit, ")")), 
                      yaxis = list(title = y_title))
