@@ -10,13 +10,9 @@ os:
 
 cache:
   packages: true
-  directories:
-    - travis_phantomjs
 
-install:
-  - R -e 'install.packages(c("devtools", "shinytest"))'
-  - R -e 'devtools::install_deps(dep = T)'
-  - R -e 'shinytest::installDependencies()'
+r_packages:
+  devtools
 
 addons:
   apt:
