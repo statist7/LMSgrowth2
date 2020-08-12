@@ -13,11 +13,8 @@ cache:
   directories:
     - travis_phantomjs
 
-r_packages:
-  - devtools
-  - shinytest
-  
 install:
+  - R -e 'install.packages(c("devtools", "shinytest"))'
   - R -e 'devtools::install_deps(dep = T)'
   - R -e 'shinytest::installDependencies()'
 
