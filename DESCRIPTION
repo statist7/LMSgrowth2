@@ -6,7 +6,7 @@ Author: Tim Cole, Mosè Giordano, Asif U Tamuri
 Maintainer: Tim Cole <tim.cole@ucl.ac.uk>
 Description: A web application for working with growth references using the LMS method.
 License: file LICENSE
-Imports: dplyr, shiny, shinyjs, purrr, stringr, plotly, DT, formattable, shinyWidgets, sitar, uuid, rio, V8, shinyhelper
+Imports: dplyr, shiny, shinyjs, purrr, stringr, plotly, DT, formattable, shinyWidgets, sitar, uuid, rio, V8, shinyhelper, tibble
 Encoding: UTF-8
 LazyData: true
 Suggests: 
