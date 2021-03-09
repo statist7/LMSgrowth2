@@ -20,7 +20,7 @@ utils::globalVariables('.')
   tagList(
     tags$script(src="LMSgrowth2/js.cookie.js"),
     shinyjs::useShinyjs(),
-    shinyjs::extendShinyjs(script=system.file('assets', 'shinyjs.js', package='LMSgrowth2')),
+    shinyjs::extendShinyjs(script='LMSgrowth2/shinyjs.js', functions=c("getcookies", "setcookie", "rmcookie", "rmcookies")),
     navbarPage(
       "LMSgrowth2",
       tabPanel("One child", .singleUI("single")),

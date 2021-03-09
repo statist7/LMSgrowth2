@@ -157,8 +157,9 @@ NULL
     df <- df[df$code %in% calculated_measurements$.codes,]
     
     # all the columns are double except 'code' and 'Centile' columns (keep them as string)
-    df <- df %>% dplyr::tbl_df(.) %>% 
-      dplyr::mutate_at(grep("code|Centile", colnames(.), invert=T), dplyr::funs(as.numeric)) %>% 
+    df <- df %>% tibble::as_tibble(.) %>% 
+      # dplyr::mutate_at(grep("code|Centile", colnames(.), invert=T), dplyr::funs(as.numeric)) %>% 
+      dplyr::mutate(across(grep("code|Centile", colnames(.), invert=T), as.numeric)) %>%
       dplyr::mutate_if(is.numeric, round, 2) %>% 
       as.data.frame()
     
